@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1/products")
 public record BestBuyController(SearchService searchService) {
 
+
+    @GetMapping
+    public String hi() {
+        return "hi";
+    }
     @PostMapping
     public void registerSearch(@RequestBody SearchRequest searchRequest) {
         log.info("New Search Request {}", searchRequest);

@@ -1,0 +1,44 @@
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${random.uuid}
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes[0]:
+        id: product-search-service
+        uri: "lb://product-search-service"
+        predicates[0]: Path=/api/v1/products/**
+      routes[1]:
+        id: eureka-server
+        uri: http://localhost:8761
+        predicates[0]: Path=/eureka/web
+        filters[0]: SetPath=/
+      routes[2]:
+        id: eureka-server-static
+        uri: http://localhost:8761
+        predicates[0]: Path=/eureka/**
+    loadbalancer:
+      ribbon:
+        enabled: false
+
+
+server:
+  port: 8080
+## Logging path for the gateway service
+logging:
+  level:
+    root: INFO
+    org:
+      springframework:
+        cloud:
+          cloud:
+          gateway.route.RouteDefinitionLocator: INFO
+          gateway: TRACE
+
+
