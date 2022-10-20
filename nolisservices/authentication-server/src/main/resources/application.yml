@@ -17,3 +17,7 @@ spring:
     loadbalancer:
       ribbon:
         enabled: false
+  data:
+    mongodb:
+      uri: //db
+      database: nolis
