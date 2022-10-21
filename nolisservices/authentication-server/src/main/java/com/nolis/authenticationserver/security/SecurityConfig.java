@@ -1,6 +1,5 @@
 package com.nolis.authenticationserver.security;
 
-import com.auth0.jwt.algorithms.Algorithm;
 import com.nolis.authenticationserver.filter.JwtAuthorizationFilter;
 import com.nolis.authenticationserver.filter.JwtUsernameAndPasswordAuthenticationFilter;
 import com.nolis.authenticationserver.service.AppUserService;
@@ -43,12 +42,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(STATELESS)
                 .and().authorizeRequests()
-                    .antMatchers(String.valueOf(endpointConfig.openEndpoints)).permitAll()
-                    .antMatchers(GET, String.valueOf(endpointConfig.adminEndpoints))
+                    .antMatchers(endpointConfig.openEndpoints).permitAll()
+                    .antMatchers(GET, endpointConfig.adminEndpoints)
                         .hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN")
                 .anyRequest().authenticated()
                 .and().addFilter(jwtUsernameAndPasswordAuthenticationFilter)
-                .addFilterBefore(new JwtAuthorizationFilter(jwtConfig, jwtUtils)
+                .addFilterBefore(new JwtAuthorizationFilter(jwtConfig, jwtUtils, endpointConfig)
                         , JwtUsernameAndPasswordAuthenticationFilter.class);
     }
 

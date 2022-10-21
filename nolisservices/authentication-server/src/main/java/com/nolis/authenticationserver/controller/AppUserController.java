@@ -10,14 +10,12 @@ import com.nolis.authenticationserver.security.JwtUtils;
 import com.nolis.authenticationserver.service.AppUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -74,7 +72,35 @@ public record AppUserController(
         }
         return ResponseEntity.badRequest().body("User id or email is required to add role");
     }
+    @GetMapping("/token/refresh")
+    private void refreshToken(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response) throws IOException {
+       String authorizationHeader = request.getHeader(AUTHORIZATION);
+        if(authorizationHeader != null && authorizationHeader.startsWith(jwtConfig.tokenPrefix())) {
+            try {
+                String refreshToken = authorizationHeader.substring(jwtConfig.tokenPrefix().length());
+                String newToken = jwtUtils.createTokenWithRefreshToken(refreshToken, request);
+                Map<String, String> responseBody = new HashMap<>();
+                responseBody.put(jwtConfig.accessHeader(), newToken);
+                responseBody.put(jwtConfig.refreshHeader(), refreshToken);
+                response.setContentType(APPLICATION_JSON_VALUE);
+                new ObjectMapper().writeValue(response.getOutputStream(), responseBody);
+            } catch (Exception e) {
+                log.error("Error logging in : {}", e.getMessage()); //TODO change this to a http error handler
+                //response.setHeader("error", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                Map<String, String> error = new HashMap<>();
+                error.put("error_message", e.getMessage());
+                response.setContentType(APPLICATION_JSON_VALUE);
+                new ObjectMapper().writeValue(response.getOutputStream(), error);
 
+            }
+
+        }
+        else {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("Authorization header must be provided");
+        }
+    }
 
 
 

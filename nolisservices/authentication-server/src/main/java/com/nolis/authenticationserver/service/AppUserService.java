@@ -11,9 +11,11 @@ public interface AppUserService extends UserDetailsService {
     AppUser saveAppUser(AppUser appUser);
     Role saveRole(Role role);
     AppUser getUserById(String id);
+    AppUser getUserByEmail(String email);
     //Role getRoleById(String id);
     void addRoleToUserById(AddRoleRequest request);
     void addRoleToUserByEmail(AddRoleRequest request);
+
     List<AppUser> getUsers();
     List<Role> getRoles();
 

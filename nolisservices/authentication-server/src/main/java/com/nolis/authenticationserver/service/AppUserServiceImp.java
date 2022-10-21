@@ -109,6 +109,16 @@ public record AppUserServiceImp(
         return roleRepo.findAll();
     }
 
+    public AppUser getUserByEmail(String email) throws UsernameNotFoundException {
+        Optional<AppUser> OptionalAppUser = appUserRepo.findAppUserByEmail(email);
+        if (OptionalAppUser.isPresent()) {
+            return OptionalAppUser.get();
+        } else {
+            log.info("User {} does not exist", email);
+            throw new UsernameNotFoundException("User does not exist");
+        }
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return  appUserRepo.findAppUserByEmail(email)

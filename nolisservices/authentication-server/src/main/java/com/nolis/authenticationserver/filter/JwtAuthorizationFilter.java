@@ -1,19 +1,12 @@
 package com.nolis.authenticationserver.filter;
-
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.lang.NonNull;
+import com.nolis.authenticationserver.security.EndpointConfig;
 import com.nolis.authenticationserver.security.JwtConfig;
 import com.nolis.authenticationserver.security.JwtUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -23,7 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
@@ -34,10 +26,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private final JwtConfig jwtConfig;
     private final JwtUtils jwtUtils;
 
+    private final EndpointConfig endpointConfig;
+
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        if(request.getServletPath().equals("/api/v1/auth/login")) {
+        if(!endpointConfig.isSecured.test(request)) {
+            log.info("Open endpoint : {}", request.getServletPath());
             filterChain.doFilter(request, response);
         }
         else {
