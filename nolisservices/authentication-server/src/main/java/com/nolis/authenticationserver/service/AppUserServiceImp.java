@@ -6,18 +6,22 @@ import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.repository.AppUserRepo;
 import com.nolis.authenticationserver.repository.RoleRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 
 @Service @Slf4j
 public record AppUserServiceImp(
         AppUserRepo appUserRepo,
-        RoleRepo roleRepo) implements AppUserService {
+        RoleRepo roleRepo,
+        BCryptPasswordEncoder passwordEncoder) implements AppUserService {
 
     @Override
     public AppUser saveAppUser(AppUser appUser) {
+        appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
         log.info("Saving new user {} to the database", appUser.toString());
         Optional<AppUser> OptionalAppUser = appUserRepo.findAppUserByEmail(
                 appUser.getEmail()
@@ -51,10 +55,32 @@ public record AppUserServiceImp(
         if (OptionalAppUser.isPresent() && OptionalRole.isPresent()) {
             AppUser appUser = OptionalAppUser.get();
             Role role = OptionalRole.get();
-            appUser.getRoles().add(role);
+            appUser.addRole(role);
+            appUserRepo.save(appUser);
         } else {
             log.info("User id {} or role {} does not exist"
                     , request.userId(), request.roleName());
+            throw new IllegalStateException("User or role does not exist");
+        }
+    }
+
+    @Override
+    public void addRoleToUserByEmail(AddRoleRequest request) {
+        log.info("Adding role {} to user {}", request.
+                roleName(), request.email());
+        Optional<AppUser> OptionalAppUser = appUserRepo.
+                findAppUserByEmail(request.email());
+        Optional<Role> OptionalRole = roleRepo.
+                findRoleByName(request.roleName());
+        if (OptionalAppUser.isPresent() && OptionalRole.isPresent()) {
+            AppUser appUser = OptionalAppUser.get();
+            Role role = OptionalRole.get();
+            appUser.addRole(role);
+            log.info("Updated user {} with role {}", appUser.toString(), role.toString());
+            appUserRepo.save(appUser);
+        } else {
+            log.info("User email {} or role {} does not exist"
+                    , request.email(), request.roleName());
             throw new IllegalStateException("User or role does not exist");
         }
     }
@@ -82,4 +108,12 @@ public record AppUserServiceImp(
         log.info("Getting all users");
         return roleRepo.findAll();
     }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return  appUserRepo.findAppUserByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found in the DB"));
+    }
+
+
 }

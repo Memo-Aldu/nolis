@@ -19,5 +19,17 @@ spring:
         enabled: false
   data:
     mongodb:
-      uri: //db
+      uri: mongodb+srv://auth-server:ki6bn3QrQVbAbPph@cluster0.6xdtq.mongodb.net/nolis
       database: nolis
+
+## Application Configuration Properties
+application:
+  jwt:
+    secretKey: 12345678901234567890123456789012
+    tokenExpirationAfterDays: 1
+    refreshTokenExpirationAfterDays: 30
+    tokenPrefix: "Bearer "
+    accessHeader: access_token
+    refreshHeader: refresh_token
+    issuer: nolis
+    audience: nolis

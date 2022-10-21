@@ -27,6 +27,10 @@ spring:
         id: authentication-server-service
         uri: "lb://authentication-server-service"
         predicates[0]: Path=/api/v1/auth/**
+      routes[4]:
+        id: authentication-server-service-login
+        uri: "lb://authentication-server-service"
+        predicates[0]: Path=/api/v1/auth/login/**
     loadbalancer:
       ribbon:
         enabled: false
