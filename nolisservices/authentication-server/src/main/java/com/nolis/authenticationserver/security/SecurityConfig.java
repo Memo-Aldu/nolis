@@ -13,12 +13,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import javax.crypto.SecretKey;
-
-import java.util.List;
-
-import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration @EnableWebSecurity @RequiredArgsConstructor
@@ -43,7 +37,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(STATELESS)
                 .and().authorizeRequests()
                     .antMatchers(endpointConfig.openEndpoints).permitAll()
-                    .antMatchers(GET, endpointConfig.adminEndpoints)
+                    .antMatchers(endpointConfig.adminEndpoints)
                         .hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN")
                 .anyRequest().authenticated()
                 .and().addFilter(jwtUsernameAndPasswordAuthenticationFilter)

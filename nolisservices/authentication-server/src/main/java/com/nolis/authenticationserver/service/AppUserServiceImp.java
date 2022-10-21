@@ -6,10 +6,13 @@ import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.repository.AppUserRepo;
 import com.nolis.authenticationserver.repository.RoleRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,44 +46,22 @@ public record AppUserServiceImp(
         }
         return roleRepo.save(role);
     }
-
     @Override
-    public void addRoleToUserById(AddRoleRequest request) {
-        log.info("Adding role {} to user {}", request.
-                roleName(), request.userId());
-        Optional<AppUser> OptionalAppUser = appUserRepo.
-                findAppUserById(request.userId());
-        Optional<Role> OptionalRole = roleRepo.
-                findRoleByName(request.roleName());
-        if (OptionalAppUser.isPresent() && OptionalRole.isPresent()) {
-            AppUser appUser = OptionalAppUser.get();
-            Role role = OptionalRole.get();
-            appUser.addRole(role);
-            appUserRepo.save(appUser);
-        } else {
-            log.info("User id {} or role {} does not exist"
-                    , request.userId(), request.roleName());
-            throw new IllegalStateException("User or role does not exist");
+    public Collection<SimpleGrantedAuthority> addRoleToUserByIdOrEmail(AddRoleRequest request) {
+        try {
+            Role role = roleRepo.findRoleByName(request.roleName())
+                    .orElseThrow(() -> new IllegalStateException("Role not found"));
+            AppUser appUser = appUserRepo.findAppUserByEmailOrId
+                    (request.email(), request.userId()).orElseThrow(
+                    () -> new IllegalStateException("User not found")
+            );
+            log.info("Adding role {} with request user {}",
+                    role, request);
+            return addRoleToUser(appUser, role);
         }
-    }
-
-    @Override
-    public void addRoleToUserByEmail(AddRoleRequest request) {
-        log.info("Adding role {} to user {}", request.
-                roleName(), request.email());
-        Optional<AppUser> OptionalAppUser = appUserRepo.
-                findAppUserByEmail(request.email());
-        Optional<Role> OptionalRole = roleRepo.
-                findRoleByName(request.roleName());
-        if (OptionalAppUser.isPresent() && OptionalRole.isPresent()) {
-            AppUser appUser = OptionalAppUser.get();
-            Role role = OptionalRole.get();
-            appUser.addRole(role);
-            log.info("Updated user {} with role {}", appUser.toString(), role.toString());
-            appUserRepo.save(appUser);
-        } else {
-            log.info("User email {} or role {} does not exist"
-                    , request.email(), request.roleName());
+        catch (Exception e) {
+            log.info("User with {} or role {} does not exist"
+                    , request, request.roleName());
             throw new IllegalStateException("User or role does not exist");
         }
     }
@@ -88,13 +69,10 @@ public record AppUserServiceImp(
     @Override
     public AppUser getUserById(String id) {
         log.info("Getting user {}", id);
-        Optional<AppUser> OptionalAppUser = appUserRepo.findAppUserById(id);
-        if (OptionalAppUser.isPresent()) {
-            return OptionalAppUser.get();
-        } else {
-            log.info("User {} does not exist", id);
-            throw new IllegalStateException("User does not exist");
-        }
+        return appUserRepo
+                .findAppUserById(id).orElseThrow(
+                        () -> new IllegalStateException("User not found")
+                );
     }
 
     @Override
@@ -125,5 +103,11 @@ public record AppUserServiceImp(
                 .orElseThrow(() -> new UsernameNotFoundException("User not found in the DB"));
     }
 
+
+    private Collection<SimpleGrantedAuthority> addRoleToUser(AppUser appUser, Role role) {
+        appUser.addRole(role);
+        appUserRepo.save(appUser);
+        return appUser.getAuthorities();
+    }
 
 }

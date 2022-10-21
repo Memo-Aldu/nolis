@@ -13,7 +13,7 @@ public class EndpointConfig {
             "/api/v1/auth/login", "/api/v1/auth/register",
                     "/api/v1/auth/logout", "/api/v1/auth/token/refresh/"};
     String[] adminEndpoints =  new String[]{
-            "/api/v1/auth/user"
+            "/api/v1/auth/user/**",
     };
 
     public Predicate<HttpServletRequest> isSecured =
