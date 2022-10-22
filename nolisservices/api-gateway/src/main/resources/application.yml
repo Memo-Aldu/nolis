@@ -10,10 +10,13 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-      routes[0]:
-        id: product-search-service
-        uri: "lb://product-search-service"
-        predicates[0]: Path=/api/v1/products/**
+      routes:
+        - id: product-search-service
+          uri: "lb://product-search-service"
+          predicates:
+            Path=/api/v1/products/**
+          filters:
+            - AuthRedirectFilter
       routes[1]:
         id: eureka-server
         uri: http://localhost:8761
@@ -35,6 +38,14 @@ spring:
       ribbon:
         enabled: false
 
+management:
+  endpoint:
+    gateway:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: gateway
 
 server:
   port: 8080

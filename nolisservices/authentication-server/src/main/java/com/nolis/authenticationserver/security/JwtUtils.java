@@ -13,7 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -22,15 +21,17 @@ import java.util.stream.Collectors;
 public class JwtUtils {
     public final JwtConfig jwtConfig;
     public final AppUserService appUserService;
+
+    private final String ISSUER = "Nolis-Authentication-Server";
     public Algorithm algorithm() {
         return Algorithm.HMAC256(jwtConfig.secretKey());
     }
 
-    public String createToken(AppUser appUser, HttpServletRequest request) {
+    public String createToken(AppUser appUser) {
         log.info("Creating token for user : {}", appUser);
         return JWT.create()
                 .withSubject(appUser.getEmail())
-                .withIssuer(request.getRequestURL().toString())
+                .withIssuer(ISSUER)
                 .withExpiresAt(java.sql.Date.valueOf(LocalDate.now()
                         .plusDays(jwtConfig.tokenExpirationAfterDays())))
                 .withClaim("roles", appUser.getAuthorities().stream()
@@ -39,10 +40,10 @@ public class JwtUtils {
                 .sign(algorithm());
     }
 
-    public String createRefreshToken(AppUser appUser, HttpServletRequest request) {
+    public String createRefreshToken(AppUser appUser) {
         return JWT.create()
                 .withSubject(appUser.getEmail())
-                .withIssuer(request.getRequestURL().toString())
+                .withIssuer(ISSUER)
                 .withExpiresAt(java.sql.Date.valueOf(LocalDate.now()
                         .plusDays(jwtConfig.refreshTokenExpirationAfterDays())))
                 .sign(algorithm());
@@ -58,14 +59,14 @@ public class JwtUtils {
         return new UsernamePasswordAuthenticationToken(email, null, authorities);
     }
 
-    public String createTokenWithRefreshToken(String refreshToken, HttpServletRequest request) {
+    public String createTokenWithRefreshToken(String refreshToken) {
         DecodedJWT decodedJWT = decodeJWT(refreshToken);
         String email = decodedJWT.getSubject();
         AppUser appUser = appUserService.getUserByEmail(email);
         if(appUser != null) {
             log.info("Creating a new token for user " +
                     "id is : {} and authorities {}", appUser.getId(), appUser.getAuthorities());
-            return createToken(appUser, request);
+            return createToken(appUser);
         } else{
             log.info("User not found");
             throw new UsernameNotFoundException("User not found with email : " + email);
