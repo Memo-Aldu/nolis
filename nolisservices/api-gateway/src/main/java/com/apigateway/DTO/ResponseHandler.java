@@ -1,13 +1,14 @@
-package com.nolis.authenticationserver.DTO;
+package com.apigateway.DTO;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
-public record ResponseHandler (
+public record ResponseHandler(
 ) {
     public static ResponseEntity<Object> httpResponse(String message, Object data,
                                                       HttpStatus status, Boolean success,
@@ -42,7 +43,10 @@ public record ResponseHandler (
 
     }
 
-    public static ResponseEntity<Object> httpBadResponse(String message, HttpStatus status ) {
+    public static ResponseEntity<Object> httpBadResponse(
+            String message, HttpStatus status) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
         try {
             Map<String, Object> response = Map.of(
                     "timestamp", System.currentTimeMillis(),
@@ -50,7 +54,7 @@ public record ResponseHandler (
                     "status", status.value(),
                     "is_success", false,
                     "data", new Object());
-            return new ResponseEntity<>(response, status);
+            return new ResponseEntity<>(response, headers, status);
         } catch (Exception e) {
 
             return new ResponseEntity<>(
@@ -65,7 +69,7 @@ public record ResponseHandler (
                 "httpStatus", INTERNAL_SERVER_ERROR,
                 "error", e.getMessage(),
                 "trace", e.getStackTrace(),
-                "isSuccess", false
+                "is_success", false
         );
     }
 }

@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component @Slf4j
-public class AfterFilters extends AbstractGatewayFilterFactory<AfterFilters.Config> {
+public class PostFilters extends AbstractGatewayFilterFactory<PostFilters.Config> {
 
-    public AfterFilters() {
+    public PostFilters() {
         super(Config.class);
     }
 
