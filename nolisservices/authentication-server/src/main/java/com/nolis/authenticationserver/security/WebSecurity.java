@@ -44,7 +44,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                         .hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN")
                 .anyRequest().authenticated()
                 .and().addFilter(jwtUsernameAndPasswordAuthenticationFilter)
-                .addFilterBefore(new JwtAuthorizationFilter(jwtConfig, jwtUtils, endpointConfig, responseHandler),
+                .addFilterBefore(new JwtAuthorizationFilter(jwtUtils, endpointConfig, responseHandler),
                         JwtUsernameAndPasswordAuthenticationFilter.class);
     }
 

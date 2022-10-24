@@ -1,17 +1,14 @@
 package com.nolis.authenticationserver.apihelper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
@@ -24,26 +21,12 @@ public class ResponseHandler {
             return new ResponseEntity<>(customHttpResponseDTO, headers,
                     customHttpResponseDTO.getStatus());
         } catch (Exception e) {
-            return new ResponseEntity<>(
-                    internalServerErrorResponse(e),
-                    customHttpResponseDTO.getStatus());
+            return InternalServerErrorResponse(e);
         }
-
     }
 
-    public ResponseEntity<CustomHttpResponseDTO> httpBadResponse(
-            CustomHttpResponseDTO customHttpResponseDTO ) {
-        try {
-            return new ResponseEntity<>(
-                    customHttpResponseDTO,
-                    customHttpResponseDTO.getStatus());
-        } catch (Exception e) {
-
-            return new ResponseEntity<>(
-                    internalServerErrorResponse(e),
-                    customHttpResponseDTO.getStatus());
-        }
-
+    public ResponseEntity<CustomHttpResponseDTO> InternalServerErrorResponse(Exception e) {
+        return new ResponseEntity<>(internalServerErrorResponse(e), INTERNAL_SERVER_ERROR);
     }
 
     private CustomHttpResponseDTO internalServerErrorResponse(Exception e) {

@@ -6,5 +6,7 @@ public interface JwtAuthenticationService {
     Map<String, Object> createTokenWitheRefreshToken(String refreshToken);
     Boolean authenticateToken(String token);
 
+    Boolean isTokenExpired(String token);
+
 
 }

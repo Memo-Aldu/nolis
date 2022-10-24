@@ -1,6 +1,7 @@
 package com.nolis.authenticationserver.service;
 
 import com.nolis.authenticationserver.DTO.AddRoleRequest;
+import com.nolis.authenticationserver.DTO.AppUserRequest;
 import com.nolis.authenticationserver.modal.AppUser;
 import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.repository.AppUserRepo;
@@ -36,15 +37,15 @@ public record AppUserServiceImp(
     }
 
     @Override
-    public Role saveRole(Role role) {
-        log.info("Saving new role {} to the database", role.toString());
-        Optional<Role> OptionalRole = roleRepo.findRoleByName(role.getName());
-        if (OptionalRole.isPresent()) {
-            log.info("Role {} already exists", role.getName());
-            throw new IllegalStateException("Role already exists");
-        }
-        return roleRepo.save(role);
+    public AppUser getAppUserByIdOrEmail(AppUserRequest request) {
+
+        log.info("Getting user {}", request);
+        return appUserRepo.findAppUserByEmailOrId(
+                request.email(), request.id()).orElseThrow(
+                () -> new IllegalStateException("User not found")
+        );
     }
+
     @Override
     public Collection<SimpleGrantedAuthority> addRoleToUserByIdOrEmail(AddRoleRequest request) {
         try {
@@ -66,34 +67,17 @@ public record AppUserServiceImp(
     }
 
     @Override
-    public AppUser getUserById(String id) {
-        log.info("Getting user {}", id);
-        return appUserRepo
-                .findAppUserById(id).orElseThrow(
-                        () -> new IllegalStateException("User not found")
-                );
-    }
-
-    @Override
     public List<AppUser> getUsers() {
         log.info("Getting all users");
         return appUserRepo.findAll();
     }
 
     @Override
-    public List<Role> getRoles() {
-        log.info("Getting all users");
-        return roleRepo.findAll();
-    }
-
-    public AppUser getUserByEmail(String email) throws UsernameNotFoundException {
-        Optional<AppUser> OptionalAppUser = appUserRepo.findAppUserByEmail(email);
-        if (OptionalAppUser.isPresent()) {
-            return OptionalAppUser.get();
-        } else {
-            log.info("User {} does not exist", email);
-            throw new UsernameNotFoundException("User does not exist");
-        }
+    public AppUser getUserByEmail(String email) {
+        log.info("Getting user by email");
+        return appUserRepo.findAppUserByEmail(email).orElseThrow(
+                () -> new IllegalStateException("User not found")
+        );
     }
 
     @Override

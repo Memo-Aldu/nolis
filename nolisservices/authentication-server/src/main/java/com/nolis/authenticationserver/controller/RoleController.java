@@ -1,34 +1,54 @@
 package com.nolis.authenticationserver.controller;
 
-import com.nolis.authenticationserver.DTO.AddRoleRequest;
-import com.nolis.authenticationserver.DTO.AppUserRequest;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
+import com.nolis.authenticationserver.DTO.RoleRequest;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
-import com.nolis.authenticationserver.modal.AppUser;
-import com.nolis.authenticationserver.service.AppUserService;
+import com.nolis.authenticationserver.modal.Role;
+import com.nolis.authenticationserver.service.RoleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j @RequestMapping("/api/v1/auth/user")
-@RestController
-public record AppUserController(
-        AppUserService appUserService,
+@RestController @Slf4j @RequestMapping("/api/v1/auth/role")
+public record RoleController(
+        RoleService roleService,
         ResponseHandler responseHandler) {
 
-    @GetMapping("/getall")
-    public ResponseEntity<CustomHttpResponseDTO> getAppUsers() {
+    @PostMapping("/save")
+    public ResponseEntity<CustomHttpResponseDTO> getUsers(@Valid @RequestBody Role role) {
         HttpHeaders headers = new HttpHeaders();
         Map<String, Object> data = Map.of(
-                "users", appUserService.getUsers()
+                "role",
+                roleService.saveRole(role)
         );
+        log.debug("Attempting to save role {}", role);
         return responseHandler.httpResponse(
                 CustomHttpResponseDTO.builder()
-                        .message("Users fetched successfully")
+                        .message("Role saved successfully")
+                        .data(data)
+                        .success(true)
+                        .timestamp(System.currentTimeMillis())
+                        .status(HttpStatus.CREATED)
+                        .build(),
+                headers);
+    }
+
+    @GetMapping("/getall")
+    public ResponseEntity<CustomHttpResponseDTO> getRoles() {
+        HttpHeaders headers = new HttpHeaders();
+        Map<String, Object> data = Map.of(
+                "roles", roleService.getRoles()
+        );
+        log.debug("Attempting to fetch all roles");
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .message("Roles fetched successfully")
                         .data(data)
                         .success(true)
                         .timestamp(System.currentTimeMillis())
@@ -38,17 +58,18 @@ public record AppUserController(
     }
 
     @GetMapping("/get")
-    public ResponseEntity<CustomHttpResponseDTO> getAppUser(
-            AppUserRequest request
+    public ResponseEntity<CustomHttpResponseDTO> getRole(
+            RoleRequest request
     ) {
         if(request.isValid()) {
             HttpHeaders headers = new HttpHeaders();
             Map<String, Object> data = Map.of(
-                    "user", appUserService.getAppUserByIdOrEmail(request)
+                    "role", roleService.getRoleByIdOrName(request)
             );
+            log.debug("Attempting to fetch role {}", request);
             return responseHandler.httpResponse(
                     CustomHttpResponseDTO.builder()
-                            .message("User fetched successfully")
+                            .message("Role fetched successfully")
                             .data(data)
                             .success(true)
                             .timestamp(System.currentTimeMillis())
@@ -60,6 +81,7 @@ public record AppUserController(
                     CustomHttpResponseDTO.builder()
                             .message("Invalid request")
                             .success(false)
+                            .data(new HashMap<>())
                             .timestamp(System.currentTimeMillis())
                             .status(HttpStatus.BAD_REQUEST)
                             .build(),
@@ -67,58 +89,32 @@ public record AppUserController(
         }
     }
 
-
-    @PostMapping("/save")
-    public ResponseEntity<CustomHttpResponseDTO> getUsers(@Valid @RequestBody AppUser appUser) {
-        HttpHeaders headers = new HttpHeaders();
-        Map<String, Object> data = Map.of(
-                "user",
-                appUserService.saveAppUser(appUser)
-        );
-        log.debug("Attempting to Save user {}", appUser);
-        return responseHandler.httpResponse(
-                CustomHttpResponseDTO.builder()
-                        .message("User saved successfully")
-                        .data(data)
-                        .success(true)
-                        .timestamp(System.currentTimeMillis())
-                        .status(HttpStatus.CREATED)
-                        .build(),
-                headers);
-    }
-
-    @PatchMapping("/addrole")
-    public ResponseEntity<CustomHttpResponseDTO> addRoleToUser(@Valid @RequestBody AddRoleRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        log.info("Attempting to add role {} with request {}"
-                ,request.roleName(), request);
+    @DeleteMapping("/delete")
+    public ResponseEntity<CustomHttpResponseDTO> deleteRole(
+            @Valid @RequestBody RoleRequest request) {
         if(request.isValid()) {
-            log.info("Adding role {} to user {}", request.roleName(), request.userId());
-            Map<String, Object> data = Map.of(
-                    "user", appUserService
-                            .addRoleToUserByIdOrEmail(request)
-            );
-            log.debug("Attempting to fetch all roles");
+            HttpHeaders headers = new HttpHeaders();
+            roleService.deleteRoleByIdOrName(request);
+            log.debug("Attempting to delete role {}", request);
             return responseHandler.httpResponse(
                     CustomHttpResponseDTO.builder()
-                            .message("Role added successfully")
-                            .data(data)
+                            .message("Role deleted successfully")
+                            .data(new HashMap<>())
                             .success(true)
                             .timestamp(System.currentTimeMillis())
                             .status(HttpStatus.OK)
                             .build(),
                     headers);
-        }
-        else {
-            log.info("User id or email is null");
+        } else {
             return responseHandler.httpResponse(
                     CustomHttpResponseDTO.builder()
-                            .message("Bad request - User id or email is null\"")
+                            .message("Invalid request")
                             .success(false)
+                            .data(new HashMap<>())
                             .timestamp(System.currentTimeMillis())
                             .status(HttpStatus.BAD_REQUEST)
                             .build(),
-                    headers);
+            new HttpHeaders());
         }
     }
 }

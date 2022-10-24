@@ -7,4 +7,8 @@ public record AddRoleRequest(
         String email,
         @NotNull
         String roleName
-) {}
+) {
+    public boolean isValid() {
+        return userId != null || email != null && roleName != null;
+    }
+}

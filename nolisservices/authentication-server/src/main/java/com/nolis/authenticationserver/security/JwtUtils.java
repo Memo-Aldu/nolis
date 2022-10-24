@@ -34,13 +34,14 @@ public class JwtUtils {
                 .withIssuer(ISSUER)
                 .withExpiresAt(java.sql.Date.valueOf(LocalDate.now()
                         .plusDays(jwtConfig.tokenExpirationAfterDays())))
-                .withClaim("roles", appUser.getAuthorities().stream()
+                .withClaim("authorities", appUser.getAuthorities().stream()
                         .map(SimpleGrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
                 .sign(algorithm());
     }
 
     public String createRefreshToken(AppUser appUser) {
+        log.info("Creating refresh token for user : {}", appUser);
         return JWT.create()
                 .withSubject(appUser.getEmail())
                 .withIssuer(ISSUER)
@@ -49,12 +50,11 @@ public class JwtUtils {
                 .sign(algorithm());
     }
 
-    public Authentication authenticateToken(String authorizationHeader) {
-        String token = authorizationHeader.substring(jwtConfig.tokenPrefix().length());
+    public Authentication authenticateToken(String token) {
         DecodedJWT decodedJWT = decodeJWT(token);
         String email = decodedJWT.getSubject();
         Collection<SimpleGrantedAuthority> authorities = decodedJWT
-                .getClaim("roles").asList(SimpleGrantedAuthority.class);
+                .getClaim("authorities").asList(SimpleGrantedAuthority.class);
         log.info("Email is : {} authorities are : {}", email, authorities);
         return new UsernamePasswordAuthenticationToken(email, null, authorities);
     }
@@ -72,18 +72,31 @@ public class JwtUtils {
             throw new UsernameNotFoundException("User not found with email : " + email);
         }
     }
-
-    public boolean isInvalid(String token) {
-        return this.isTokenExpired(token);
-    }
-
     private DecodedJWT decodeJWT(String token) {
         JWTVerifier verifier = JWT.require(algorithm()).build();
         return verifier.verify(token);
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return this.decodeJWT(token).getExpiresAt().before(java.sql.Date.valueOf(LocalDate.now()));
+    }
+
+    public String getTokenFromHeader(String authorizationHeader) {
+        return authorizationHeader.substring(jwtConfig.tokenPrefix().length());
+    }
+
+    public Boolean tokenStartsWithPrefix(String authorizationHeader) {
+        return authorizationHeader.startsWith(jwtConfig.tokenPrefix());
+    }
+
+    public Boolean validateToken(String token) {
+        try {
+            JWT.require(algorithm()).build().verify(token);
+            return true;
+        } catch (Exception e) {
+            log.error("Error while validating token : {}", e.getMessage());
+            return false;
+        }
     }
 
 }

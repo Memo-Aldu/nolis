@@ -19,6 +19,7 @@ public record JwtAuthenticationServiceImp(
     public Map<String, Object> createTokenWitheRefreshToken(String refreshToken) {
         String newToken = jwtUtils.createTokenWithRefreshToken(refreshToken);
         Map<String, Object> responseBody = new HashMap<>();
+        log.info("New token is : {}", newToken);
         responseBody.put(jwtConfig.accessHeader(), newToken);
         responseBody.put(jwtConfig.refreshHeader(), refreshToken);
         return responseBody;
@@ -31,6 +32,11 @@ public record JwtAuthenticationServiceImp(
         log.info("User {} is authenticated : {} ",
                 authentication.getName(), authentication.isAuthenticated());
         return authentication.isAuthenticated();
+    }
+
+    @Override
+    public Boolean isTokenExpired(String token) {
+        return jwtUtils.isTokenExpired(token);
     }
 
 }

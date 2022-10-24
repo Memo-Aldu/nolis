@@ -9,11 +9,20 @@ import java.util.function.Predicate;
 
 @Component @Data
 public class EndpointConfig {
+    private final String API_PREFIX = "/api/v1/auth/";
     String[] openEndpoints = new String[]{
-            "/api/v1/auth/login", "/api/v1/auth/register",
-                    "/api/v1/auth/logout", "/api/v1/auth/token/refresh/"};
+            API_PREFIX+"login", API_PREFIX+"register",
+            API_PREFIX+"token/refresh/", API_PREFIX+"token/validate",
+            API_PREFIX+"authenticate"};
+
+    String[] userEndpoints = new String[]{
+            API_PREFIX+"user/profile", API_PREFIX+"user/update",
+            API_PREFIX+"user/delete", API_PREFIX+"user/logout",
+            API_PREFIX+"user/roles"};
     String[] adminEndpoints =  new String[]{
-            "/api/v1/auth/user/**",
+            API_PREFIX+"user/getall/**", API_PREFIX+"user/save/**",
+            API_PREFIX+"user/update/**", API_PREFIX+"user/delete/**",
+            API_PREFIX+"role/**", API_PREFIX+"user/addrole", API_PREFIX+"user/roles"
     };
 
     public Predicate<HttpServletRequest> isSecured =

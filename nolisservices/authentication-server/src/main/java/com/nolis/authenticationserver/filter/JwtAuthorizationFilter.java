@@ -25,7 +25,6 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 @AllArgsConstructor @Slf4j
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
-    private final JwtConfig jwtConfig;
     private final JwtUtils jwtUtils;
     private final EndpointConfig endpointConfig;
     private final ResponseHandler responseHandler;
@@ -40,9 +39,10 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         else {
             String authorizationHeader = request.getHeader(AUTHORIZATION);
             response.setHeader(AUTHORIZATION, authorizationHeader);
-            if(authorizationHeader != null && authorizationHeader.startsWith(jwtConfig.tokenPrefix())) {
+            if(authorizationHeader != null && jwtUtils.tokenStartsWithPrefix(authorizationHeader)) {
                 try {
-                    Authentication authentication = jwtUtils.authenticateToken(authorizationHeader);
+                    Authentication authentication = jwtUtils.authenticateToken(
+                            jwtUtils.getTokenFromHeader(authorizationHeader));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     filterChain.doFilter(request, response);
                 } catch (Exception e) {

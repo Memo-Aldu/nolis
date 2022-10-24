@@ -1,6 +1,5 @@
 package com.nolis.authenticationserver.filter;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.DTO.EmailPasswordAuthenticationRequest;
@@ -50,7 +49,6 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     @Override
@@ -71,7 +69,6 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
                             .timestamp(System.currentTimeMillis())
                             .build(), response);
         response.setHeader("refresh_token", refreshToken);
-
     }
 
     @Override
