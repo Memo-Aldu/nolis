@@ -1,15 +1,17 @@
 package com.nolis.authenticationserver.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.lang.NonNull;
+import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
+import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.security.EndpointConfig;
 import com.nolis.authenticationserver.security.JwtConfig;
 import com.nolis.authenticationserver.security.JwtUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -25,8 +27,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtConfig jwtConfig;
     private final JwtUtils jwtUtils;
-
     private final EndpointConfig endpointConfig;
+    private final ResponseHandler responseHandler;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
@@ -37,6 +39,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         }
         else {
             String authorizationHeader = request.getHeader(AUTHORIZATION);
+            response.setHeader(AUTHORIZATION, authorizationHeader);
             if(authorizationHeader != null && authorizationHeader.startsWith(jwtConfig.tokenPrefix())) {
                 try {
                     Authentication authentication = jwtUtils.authenticateToken(authorizationHeader);
@@ -54,8 +57,14 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
             }
             else {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.getWriter().write("Authorization header must be provided");
+                 response = responseHandler.jsonResponse(
+                        CustomHttpResponseDTO.builder()
+                                .timestamp(System.currentTimeMillis())
+                                .message("Missing authorization header")
+                                .status(HttpStatus.BAD_REQUEST)
+                                .success(false)
+                                .data(new HashMap<>())
+                                .build(), response);
             }
         }
     }

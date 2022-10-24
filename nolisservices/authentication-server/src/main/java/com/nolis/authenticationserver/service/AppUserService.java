@@ -5,7 +5,6 @@ import com.nolis.authenticationserver.modal.AppUser;
 import com.nolis.authenticationserver.modal.Role;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
-
 import java.util.Collection;
 import java.util.List;
 
