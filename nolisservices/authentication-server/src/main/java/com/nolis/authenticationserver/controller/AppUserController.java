@@ -4,6 +4,7 @@ import com.nolis.authenticationserver.DTO.AddRoleRequest;
 import com.nolis.authenticationserver.DTO.AppUserRequest;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
+import com.nolis.authenticationserver.exception.BadRequestException;
 import com.nolis.authenticationserver.modal.AppUser;
 import com.nolis.authenticationserver.service.AppUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +40,7 @@ public record AppUserController(
 
     @GetMapping("/get")
     public ResponseEntity<CustomHttpResponseDTO> getAppUser(
-            AppUserRequest request
-    ) {
+            AppUserRequest request) {
         if(request.isValid()) {
             HttpHeaders headers = new HttpHeaders();
             Map<String, Object> data = Map.of(
@@ -56,20 +56,16 @@ public record AppUserController(
                             .build(),
                     headers);
         } else {
-            return responseHandler.httpResponse(
-                    CustomHttpResponseDTO.builder()
-                            .message("Invalid request")
-                            .success(false)
-                            .timestamp(System.currentTimeMillis())
-                            .status(HttpStatus.BAD_REQUEST)
-                            .build(),
-                    new HttpHeaders());
+            throw new BadRequestException("Invalid request body for "+request);
         }
     }
 
 
     @PostMapping("/save")
-    public ResponseEntity<CustomHttpResponseDTO> getUsers(@Valid @RequestBody AppUser appUser) {
+    public ResponseEntity<CustomHttpResponseDTO> getUsers(@RequestBody AppUser appUser) {
+        if(!appUser.isValidEntity()) {
+            throw new BadRequestException("Invalid request body for "+appUser);
+        }
         HttpHeaders headers = new HttpHeaders();
         Map<String, Object> data = Map.of(
                 "user",
@@ -89,36 +85,24 @@ public record AppUserController(
 
     @PatchMapping("/addrole")
     public ResponseEntity<CustomHttpResponseDTO> addRoleToUser(@Valid @RequestBody AddRoleRequest request) {
+        if(!request.isValid()) {
+            throw new BadRequestException("Invalid request body for "+request);
+        }
         HttpHeaders headers = new HttpHeaders();
-        log.info("Attempting to add role {} with request {}"
-                ,request.roleName(), request);
-        if(request.isValid()) {
-            log.info("Adding role {} to user {}", request.roleName(), request.userId());
-            Map<String, Object> data = Map.of(
-                    "user", appUserService
-                            .addRoleToUserByIdOrEmail(request)
-            );
-            log.debug("Attempting to fetch all roles");
-            return responseHandler.httpResponse(
-                    CustomHttpResponseDTO.builder()
-                            .message("Role added successfully")
-                            .data(data)
-                            .success(true)
-                            .timestamp(System.currentTimeMillis())
-                            .status(HttpStatus.OK)
-                            .build(),
-                    headers);
-        }
-        else {
-            log.info("User id or email is null");
-            return responseHandler.httpResponse(
-                    CustomHttpResponseDTO.builder()
-                            .message("Bad request - User id or email is null\"")
-                            .success(false)
-                            .timestamp(System.currentTimeMillis())
-                            .status(HttpStatus.BAD_REQUEST)
-                            .build(),
-                    headers);
-        }
+        log.info("Adding role {} to user {}", request.roleName(), request.userId());
+        Map<String, Object> data = Map.of(
+                "user", appUserService
+                        .addRoleToUserByIdOrEmail(request)
+        );
+        log.debug("Attempting to fetch all roles");
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .message("Role added successfully")
+                        .data(data)
+                        .success(true)
+                        .timestamp(System.currentTimeMillis())
+                        .status(HttpStatus.OK)
+                        .build(),
+                headers);
     }
 }

@@ -5,6 +5,6 @@ public record RoleRequest(
     String id
 ) {
     public boolean isValid() {
-        return name != null || id != null;
+        return name == null && id == null;
     }
 }

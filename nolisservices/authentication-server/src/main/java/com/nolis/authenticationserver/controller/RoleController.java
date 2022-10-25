@@ -3,6 +3,7 @@ package com.nolis.authenticationserver.controller;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.DTO.RoleRequest;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
+import com.nolis.authenticationserver.exception.BadRequestException;
 import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.service.RoleService;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +11,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +20,10 @@ public record RoleController(
         ResponseHandler responseHandler) {
 
     @PostMapping("/save")
-    public ResponseEntity<CustomHttpResponseDTO> getUsers(@Valid @RequestBody Role role) {
+    public ResponseEntity<CustomHttpResponseDTO> saveRole(@RequestBody Role role) {
+        if(!role.isValidEntity()) {
+            throw new BadRequestException("Invalid request body for "+role);
+        }
         HttpHeaders headers = new HttpHeaders();
         Map<String, Object> data = Map.of(
                 "role",
@@ -59,62 +61,42 @@ public record RoleController(
 
     @GetMapping("/get")
     public ResponseEntity<CustomHttpResponseDTO> getRole(
-            RoleRequest request
-    ) {
-        if(request.isValid()) {
-            HttpHeaders headers = new HttpHeaders();
-            Map<String, Object> data = Map.of(
-                    "role", roleService.getRoleByIdOrName(request)
-            );
-            log.debug("Attempting to fetch role {}", request);
-            return responseHandler.httpResponse(
-                    CustomHttpResponseDTO.builder()
-                            .message("Role fetched successfully")
-                            .data(data)
-                            .success(true)
-                            .timestamp(System.currentTimeMillis())
-                            .status(HttpStatus.OK)
-                            .build(),
-                    headers);
-        } else {
-            return responseHandler.httpResponse(
-                    CustomHttpResponseDTO.builder()
-                            .message("Invalid request")
-                            .success(false)
-                            .data(new HashMap<>())
-                            .timestamp(System.currentTimeMillis())
-                            .status(HttpStatus.BAD_REQUEST)
-                            .build(),
-                    new HttpHeaders());
+            RoleRequest request) {
+        if(!request.isValid()) {
+            throw new BadRequestException("Invalid request body for "+request);
         }
+        HttpHeaders headers = new HttpHeaders();
+        Map<String, Object> data = Map.of(
+                "role", roleService.getRoleByIdOrName(request)
+        );
+        log.debug("Attempting to fetch role {}", request);
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .message("Role fetched successfully")
+                        .data(data)
+                        .success(true)
+                        .timestamp(System.currentTimeMillis())
+                        .status(HttpStatus.OK)
+                        .build(),
+                headers);
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<CustomHttpResponseDTO> deleteRole(
-            @Valid @RequestBody RoleRequest request) {
-        if(request.isValid()) {
-            HttpHeaders headers = new HttpHeaders();
-            roleService.deleteRoleByIdOrName(request);
-            log.debug("Attempting to delete role {}", request);
-            return responseHandler.httpResponse(
-                    CustomHttpResponseDTO.builder()
-                            .message("Role deleted successfully")
-                            .data(new HashMap<>())
-                            .success(true)
-                            .timestamp(System.currentTimeMillis())
-                            .status(HttpStatus.OK)
-                            .build(),
-                    headers);
-        } else {
-            return responseHandler.httpResponse(
-                    CustomHttpResponseDTO.builder()
-                            .message("Invalid request")
-                            .success(false)
-                            .data(new HashMap<>())
-                            .timestamp(System.currentTimeMillis())
-                            .status(HttpStatus.BAD_REQUEST)
-                            .build(),
-            new HttpHeaders());
+    public ResponseEntity<CustomHttpResponseDTO> deleteRole(@RequestBody RoleRequest request) {
+        if(!request.isValid()) {
+            throw new BadRequestException("Invalid request body for "+request);
         }
+        HttpHeaders headers = new HttpHeaders();
+        roleService.deleteRoleByIdOrName(request);
+        log.debug("Attempting to delete role {}", request);
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .message("Role deleted successfully")
+                        .data(new HashMap<>())
+                        .success(true)
+                        .timestamp(System.currentTimeMillis())
+                        .status(HttpStatus.OK)
+                        .build(),
+                headers);
     }
 }

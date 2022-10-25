@@ -3,6 +3,8 @@ package com.nolis.authenticationserver.controller;
 import com.mongodb.lang.NonNull;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
+import com.nolis.authenticationserver.exception.MissingAuthenticationException;
+import com.nolis.authenticationserver.exception.TokenAuthenticationException;
 import com.nolis.authenticationserver.security.JwtUtils;
 import com.nolis.authenticationserver.service.JwtAuthenticationService;
 import lombok.extern.slf4j.Slf4j;
@@ -40,19 +42,24 @@ public record AuthController(
                     return tokenIsExpiredResponse(authorizationHeader);
                 }
                 else if(jwtAuthenticationService.authenticateToken(token)) {
-                    return responseHandler.httpResponse(
-                            CustomHttpResponseDTO.builder()
-                                    .message("User authenticated successfully")
-                                    .data(data)
-                                    .success(true)
-                                    .timestamp(System.currentTimeMillis())
-                                    .status(HttpStatus.OK)
-                                    .build(),
-                            addJwtHeaders(authorizationHeader));
+                    try {
+                        return responseHandler.httpResponse(
+                                CustomHttpResponseDTO.builder()
+                                        .message("User authenticated successfully")
+                                        .data(data)
+                                        .success(true)
+                                        .timestamp(System.currentTimeMillis())
+                                        .status(HttpStatus.OK)
+                                        .build(),
+                                addJwtHeaders(authorizationHeader));
+                    } catch (Exception e) {
+                        log.info("Token authentication failed");
+                        throw new TokenAuthenticationException("Token authentication failed");
+                    }
                 }
                 else {
                     log.info("Token authentication failed");
-                    return tokenIsInvalidResponse(authorizationHeader);
+                    throw new TokenAuthenticationException("Token authentication failed");
                 }
             } catch (Exception e) {
                 log.error("Error logging in : {}", e.getMessage()); //TODO change this to a http error handler
@@ -62,7 +69,7 @@ public record AuthController(
         }
         else {
             log.info("Authorization header must be provided");
-            return tokenIsMissingAuthHeader();
+            throw new MissingAuthenticationException("Authorization header must be provided");
         }
     }
 
@@ -89,7 +96,7 @@ public record AuthController(
             }
         }
         else {
-            return tokenIsMissingAuthHeader();
+            throw new MissingAuthenticationException("Authorization header must be provided");
         }
     }
 
@@ -111,31 +118,5 @@ public record AuthController(
                         .status(HttpStatus.FORBIDDEN)
                         .build(),
                 addJwtHeaders(authorizationHeader));
-    }
-
-    private ResponseEntity<CustomHttpResponseDTO> tokenIsInvalidResponse(String authorizationHeader) {
-        Map<String, Object> data = Map.of(
-                "token", jwtUtils.getTokenFromHeader(authorizationHeader));
-        return responseHandler.httpResponse(
-                CustomHttpResponseDTO.builder()
-                        .message("Token Cannot be trusted")
-                        .data(data)
-                        .success(false)
-                        .timestamp(System.currentTimeMillis())
-                        .status(HttpStatus.FORBIDDEN)
-                        .build(),
-                addJwtHeaders(authorizationHeader));
-    }
-
-    // missing auth header
-    private ResponseEntity<CustomHttpResponseDTO> tokenIsMissingAuthHeader() {
-        return responseHandler.httpResponse(
-                CustomHttpResponseDTO.builder()
-                        .message("Authorization header must be provided")
-                        .success(false)
-                        .timestamp(System.currentTimeMillis())
-                        .status(HttpStatus.FORBIDDEN)
-                        .build(),
-                new HttpHeaders());
     }
 }

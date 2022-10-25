@@ -2,6 +2,8 @@ package com.nolis.authenticationserver.service;
 
 import com.nolis.authenticationserver.DTO.AddRoleRequest;
 import com.nolis.authenticationserver.DTO.AppUserRequest;
+import com.nolis.authenticationserver.exception.AppEntityAlreadyExistException;
+import com.nolis.authenticationserver.exception.AppEntityNotFoundException;
 import com.nolis.authenticationserver.modal.AppUser;
 import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.repository.AppUserRepo;
@@ -31,7 +33,7 @@ public record AppUserServiceImp(
         );
         if (OptionalAppUser.isPresent()) {
             log.info("User {} already exists", appUser.getEmail());
-            throw new IllegalStateException("User already exists");
+            throw new AppEntityAlreadyExistException("User already exists");
         }
         return appUserRepo.save(appUser);
     }
@@ -42,7 +44,7 @@ public record AppUserServiceImp(
         log.info("Getting user {}", request);
         return appUserRepo.findAppUserByEmailOrId(
                 request.email(), request.id()).orElseThrow(
-                () -> new IllegalStateException("User not found")
+                () -> new AppEntityNotFoundException("User not found, request: " + request)
         );
     }
 
@@ -62,7 +64,7 @@ public record AppUserServiceImp(
         catch (Exception e) {
             log.info("User with {} or role {} does not exist"
                     , request, request.roleName());
-            throw new IllegalStateException("User or role does not exist");
+            throw new AppEntityNotFoundException("User or role does not exist, request: " + request);
         }
     }
 
@@ -76,14 +78,15 @@ public record AppUserServiceImp(
     public AppUser getUserByEmail(String email) {
         log.info("Getting user by email");
         return appUserRepo.findAppUserByEmail(email).orElseThrow(
-                () -> new IllegalStateException("User not found")
+                () -> new AppEntityNotFoundException("User not found with email " + email)
         );
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return  appUserRepo.findAppUserByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found in the DB"));
+                .orElseThrow(() -> new AppEntityNotFoundException
+                        ("User with email " + email + "not found in the DB"));
     }
 
 

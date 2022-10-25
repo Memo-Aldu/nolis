@@ -8,8 +8,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -22,11 +20,8 @@ public class AppUser implements UserDetails {
     private String id;
     @Indexed(unique = true)
     private Long discordId;
-    @NotNull
     private String username;
-    @NotNull
     private String password;
-    @NotNull
     @Indexed(unique = true)
     private String email;
     @Indexed(unique = true)
@@ -75,6 +70,10 @@ public class AppUser implements UserDetails {
 
     public void removeRole(Role role) {
         this.authorities.remove(new SimpleGrantedAuthority(role.getName()));
+    }
+
+    public boolean isValidEntity() {
+        return this.username != null && this.password != null && this.email != null;
     }
 
 

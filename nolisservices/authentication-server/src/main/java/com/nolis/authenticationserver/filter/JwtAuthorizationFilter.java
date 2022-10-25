@@ -1,16 +1,15 @@
 package com.nolis.authenticationserver.filter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.lang.NonNull;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.security.EndpointConfig;
-import com.nolis.authenticationserver.security.JwtConfig;
 import com.nolis.authenticationserver.security.JwtUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -22,7 +21,7 @@ import java.util.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
-@AllArgsConstructor @Slf4j
+@AllArgsConstructor @Slf4j @Component
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
@@ -45,21 +44,25 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                             jwtUtils.getTokenFromHeader(authorizationHeader));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     filterChain.doFilter(request, response);
-                } catch (Exception e) {
-                    log.error("Error logging in : {}", e.getMessage()); //TODO change this to catch this and respond to user handler
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    Map<String, String> error = new HashMap<>();
-                    error.put("error_message", e.getMessage());
-                    error.put("trace", Arrays.toString(e.getStackTrace()));
-                    response.setContentType(APPLICATION_JSON_VALUE);
-                    new ObjectMapper().writeValue(response.getOutputStream(), error);
                 }
-
+                catch (Exception e){
+                        response = responseHandler.jsonResponse(
+                            CustomHttpResponseDTO.builder()
+                                    .data(Map.of("error", "Invalid token"))
+                                    .timestamp(System.currentTimeMillis())
+                                    .status(HttpStatus.UNAUTHORIZED)
+                                    .success(false)
+                                    .message("Invalid token")
+                                    .build(), response);
+                }
             }
             else {
                  response = responseHandler.jsonResponse(
                         CustomHttpResponseDTO.builder()
                                 .timestamp(System.currentTimeMillis())
+                                .data(Map.of("error", "Missing " +
+                                        "authentication header"))
+
                                 .message("Missing authorization header")
                                 .status(HttpStatus.BAD_REQUEST)
                                 .success(false)

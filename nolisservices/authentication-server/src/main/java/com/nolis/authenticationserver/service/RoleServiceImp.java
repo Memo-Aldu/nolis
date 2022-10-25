@@ -1,6 +1,7 @@
 package com.nolis.authenticationserver.service;
 
 import com.nolis.authenticationserver.DTO.RoleRequest;
+import com.nolis.authenticationserver.exception.AppEntityAlreadyExistException;
 import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.repository.RoleRepo;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ public class RoleServiceImp implements RoleService {
         Optional<Role> OptionalRole = roleRepo.findRoleByName(role.getName());
         if (OptionalRole.isPresent()) {
             log.info("Role {} already exists", role.getName());
-            throw new IllegalStateException("Role already exists");
+            throw new AppEntityAlreadyExistException("Role already exists");
         }
         return roleRepo.save(role);
     }

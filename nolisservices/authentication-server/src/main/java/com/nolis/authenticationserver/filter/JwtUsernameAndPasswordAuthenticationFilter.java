@@ -34,21 +34,21 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request,
-                                                HttpServletResponse response) throws AuthenticationException {
+                                                HttpServletResponse response) {
+        EmailPasswordAuthenticationRequest authenticationRequest = null;
         try {
-            EmailPasswordAuthenticationRequest authenticationRequest = new ObjectMapper()
+            authenticationRequest = new ObjectMapper()
                     .readValue(request.getInputStream(), EmailPasswordAuthenticationRequest.class);
-            log.info("\nEmail is : {}, Password is : {}",
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("\nEmail is : {}, Password is : {}",
                     authenticationRequest.email(), authenticationRequest.password());
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     authenticationRequest.email(),
                     authenticationRequest.password()
             );
-
             return authenticationManager.authenticate(authentication);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -74,6 +74,13 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                               AuthenticationException failed) throws IOException, ServletException {
-        super.unsuccessfulAuthentication(request, response, failed);
+        response = responseHandler.jsonResponse(
+                CustomHttpResponseDTO.builder()
+                        .data(Map.of("error", "Invalid token"))
+                        .timestamp(System.currentTimeMillis())
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .success(false)
+                        .message("Invalid token")
+                        .build(), response);
     }
 }

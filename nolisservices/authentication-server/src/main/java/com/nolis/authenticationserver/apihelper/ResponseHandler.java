@@ -17,6 +17,10 @@ public class ResponseHandler {
     private final ObjectMapper objectMapper;
     public ResponseEntity<CustomHttpResponseDTO> httpResponse(
             CustomHttpResponseDTO customHttpResponseDTO , HttpHeaders headers) {
+        if(headers == null) {
+            headers = new HttpHeaders();
+            headers.add("Content-Type", APPLICATION_JSON_VALUE);
+        }
         try {
             return new ResponseEntity<>(customHttpResponseDTO, headers,
                     customHttpResponseDTO.getStatus());
@@ -40,8 +44,7 @@ public class ResponseHandler {
     }
 
     public HttpServletResponse jsonResponse (CustomHttpResponseDTO customHttpResponseDTO,
-                                             HttpServletResponse response)
-            throws IOException {
+                                             HttpServletResponse response) {
         response.setContentType(APPLICATION_JSON_VALUE);
         try {
             String json = objectMapper.writeValueAsString(
@@ -51,11 +54,16 @@ public class ResponseHandler {
             response.getWriter().flush();
             return response;
         } catch (Exception e) {
-            String errJson =  objectMapper
-                    .writeValueAsString(internalServerErrorResponse(e));
-            response.getWriter().write(errJson);
-            response.setStatus(INTERNAL_SERVER_ERROR.value());
-            response.getWriter().flush();
+            String errJson = null;
+            try {
+                errJson = objectMapper
+                        .writeValueAsString(internalServerErrorResponse(e));
+                response.getWriter().write(errJson);
+                response.setStatus(INTERNAL_SERVER_ERROR.value());
+                response.getWriter().flush();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
             return response;
         }
     }
