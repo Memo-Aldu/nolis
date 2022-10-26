@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -12,13 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.Map;
 
-@Component
+@Component @Slf4j
 public class AuthRedirectFilter extends AbstractGatewayFilterFactory<AuthRedirectFilter.Config> {
 
     private final WebClient.Builder webClientBuilder;
@@ -30,58 +29,51 @@ public class AuthRedirectFilter extends AbstractGatewayFilterFactory<AuthRedirec
 
     @Override
     public GatewayFilter apply(Config config) {
-        // redirect to authentication server, if user is authenticated then redirect to the requested url, else redirect to login page
         return (exchange, chain) -> {
-            if(!exchange.getRequest().getHeaders().containsKey("Authorization")) {
-                try {
-                    return onError(exchange, "No Authorization Header Provided"
-                            , HttpStatus.UNAUTHORIZED, config);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+            String path = exchange.getRequest().getPath().toString();
+            ServerHttpResponse response = exchange.getResponse();
             String token = exchange.getRequest().getHeaders().getFirst("Authorization");
             System.out.println("token: " + token);
             return webClientBuilder.build()
                     .post()
                     .uri("http://authentication-server-service/api/v1/auth/authenticate")
                     .header("Authorization", token)
-                    .retrieve().bodyToMono(CustomHttpResponseDTO.class)
-                     .flatMapMany(response -> {
-                         System.out.println("response: " + response);
-                         //TODO: find how to respond with the server response
-                            if ((response.getStatus() == HttpStatus.OK)) {
-
-                                return chain.filter(exchange
-                                        .mutate()
-                                        .request(exchange.getRequest().mutate().header("Authorization", token).build())
-                                        .build());
-                            } else {
-                                //TODO return json object response
-                             return Mono.defer(() -> {
-                                 ServerHttpResponse serverHttpResponse = exchange.getResponse();
-                                 serverHttpResponse.getHeaders().set("Content-Type", "application/json");
-                                 serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
-                                 DataBuffer buffer = exchange.getResponse()
-                                         .bufferFactory().wrap(response.toString().getBytes());
-                                 return serverHttpResponse.writeWith(Flux.just(buffer));
-                             });
-                            }
-                      }).then();
-        };
+                    .exchangeToMono(clientResponse -> {
+                        if(clientResponse.statusCode().isError()) {
+                            //get body message from response
+                            String message = "Authentication Failed";
+                            // print headers
+                            return onError(response, message,
+                                    clientResponse.statusCode(), config,
+                                    Map.of(
+                                            "error", clientResponse.headers().header("error_type")
+                                    )
+                            );
+                        }
+                        else {
+                            return chain.filter(exchange
+                                    .mutate()
+                                    .request(exchange.getRequest().mutate().header("Authorization", token).build())
+                                    .build());
+                        }});
+            };
     }
-    private Mono<Void> onError(ServerWebExchange exchange,
-                               String err, HttpStatus httpStatus, Config config) throws JsonProcessingException {
-        ServerHttpResponse response = exchange.getResponse();
-        String json = config.MAPPER.writeValueAsString(
-                new CustomHttpResponseDTO(
-                        false,
-                        System.currentTimeMillis(),
-                        httpStatus,
-                        new HashMap<>(),
-                        err
-                )
-        );
+    private Mono<Void> onError(ServerHttpResponse response, String err,
+                               HttpStatus httpStatus, Config config, Map<String, Object> data) {
+        String json = null;
+        try {
+            json = config.MAPPER.writeValueAsString(
+                    new CustomHttpResponseDTO(
+                            false,
+                            System.currentTimeMillis(),
+                            httpStatus,
+                            data,
+                            err
+                    )
+            );
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         response.setStatusCode(httpStatus);
         DataBuffer buffer = response
                 .bufferFactory().wrap(json.getBytes(StandardCharsets.UTF_8));
@@ -90,7 +82,6 @@ public class AuthRedirectFilter extends AbstractGatewayFilterFactory<AuthRedirec
     }
     @Getter
     public static class Config {
-        // Put the configuration properties for your filter here
         private final ObjectMapper MAPPER = new ObjectMapper();
 
         public Config() {

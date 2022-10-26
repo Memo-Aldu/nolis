@@ -5,6 +5,7 @@ import com.nolis.authenticationserver.exception.*;
 import lombok.AllArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,12 +32,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .success(false)
                         .message(ex.getLocalizedMessage())
                         .build(),
-                null);
+                headers(ex.getMessage()));
     }
 
     @ExceptionHandler(BadRequestException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleBadRequest(
             BadRequestException ex) {
+
         return responseHandler.httpResponse(
                 CustomHttpResponseDTO.builder()
                         .data(Map.of("error", ex.getMessage()))
@@ -45,7 +47,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .success(false)
                         .message(ex.getLocalizedMessage())
                         .build(),
-                null);
+                headers(ex.getMessage()));
     }
 
     @ExceptionHandler(AppEntityAlreadyExistException.class)
@@ -59,11 +61,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .success(false)
                         .message(ex.getLocalizedMessage())
                         .build(),
-                null);
+                headers(ex.getMessage()));
     }
 
     @ExceptionHandler({TokenAuthenticationException.class,
-    MissingAuthenticationException.class, AppAuthenticationException.class})
+            InvalidTokenException.class, MissingAuthenticationException.class})
     protected ResponseEntity<CustomHttpResponseDTO> handleTokenAuthenticationException(
             RuntimeException ex) {
         return responseHandler.httpResponse(
@@ -74,6 +76,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .success(false)
                         .message(ex.getLocalizedMessage())
                         .build(),
-                null);
+                headers(ex.getMessage()));
+    }
+
+    private HttpHeaders headers(String message) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        String ERROR_TYPE_HEADER = "error_type";
+        headers.add(ERROR_TYPE_HEADER, message);
+        return headers;
     }
 }

@@ -3,8 +3,10 @@ package com.nolis.authenticationserver.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.nolis.authenticationserver.exception.AppEntityNotFoundException;
+import com.nolis.authenticationserver.exception.InvalidTokenException;
 import com.nolis.authenticationserver.modal.AppUser;
 import com.nolis.authenticationserver.service.AppUserService;
 import lombok.AllArgsConstructor;
@@ -51,16 +53,23 @@ public class JwtUtils {
     }
 
     public Authentication authenticateToken(String token) {
-        DecodedJWT decodedJWT = decodeJWT(token);
-        String email = decodedJWT.getSubject();
-        Collection<SimpleGrantedAuthority> authorities = decodedJWT
-                .getClaim("authorities").asList(SimpleGrantedAuthority.class);
-        log.info("Email is : {} authorities are : {}", email, authorities);
-        return new UsernamePasswordAuthenticationToken(email, null, authorities);
+        try {
+            DecodedJWT decodedJWT = decodeAndVerifyJWT(token);
+            String email = decodedJWT.getSubject();
+            Collection<SimpleGrantedAuthority> authorities = decodedJWT
+                    .getClaim("authorities").asList(SimpleGrantedAuthority.class);
+            log.info("Email is : {} authorities are : {}", email, authorities);
+            return new UsernamePasswordAuthenticationToken(email, null, authorities);
+            // catcj InvalidTokenException or SignatureVerificationException
+        } catch (Exception e) {
+            log.warn("Invalid token : {}", e.getMessage());
+            throw new InvalidTokenException("Invalid token: " + e.getMessage());
+        }
+
     }
 
     public String createTokenWithRefreshToken(String refreshToken) {
-        DecodedJWT decodedJWT = decodeJWT(refreshToken);
+        DecodedJWT decodedJWT = decodeAndVerifyJWT(refreshToken);
         String email = decodedJWT.getSubject();
         AppUser appUser = appUserService.getUserByEmail(email);
         if(appUser != null) {
@@ -72,14 +81,6 @@ public class JwtUtils {
             throw new AppEntityNotFoundException("User not found with email : " + email);
         }
     }
-    private DecodedJWT decodeJWT(String token) {
-        JWTVerifier verifier = JWT.require(algorithm()).build();
-        return verifier.verify(token);
-    }
-
-    public boolean isTokenExpired(String token) {
-        return this.decodeJWT(token).getExpiresAt().before(java.sql.Date.valueOf(LocalDate.now()));
-    }
 
     public String getTokenFromHeader(String authorizationHeader) {
         return authorizationHeader.substring(jwtConfig.tokenPrefix().length());
@@ -89,14 +90,18 @@ public class JwtUtils {
         return authorizationHeader.startsWith(jwtConfig.tokenPrefix());
     }
 
-    public Boolean validateToken(String token) {
+    public void isValidToken(String token) {
         try {
-            JWT.require(algorithm()).build().verify(token);
-            return true;
-        } catch (Exception e) {
-            log.error("Error while validating token : {}", e.getMessage());
-            return false;
+            decodeAndVerifyJWT(token);
+        } catch (InvalidTokenException e) {
+            log.error("Invalid token : {}", e.getMessage());
+            throw new InvalidTokenException("Invalid token: " + e.getMessage());
         }
+    }
+
+    private DecodedJWT decodeAndVerifyJWT(String token) throws SignatureVerificationException {
+        JWTVerifier verifier = JWT.require(algorithm()).build();
+        return verifier.verify(token);
     }
 
 }

@@ -52,7 +52,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                                     .timestamp(System.currentTimeMillis())
                                     .status(HttpStatus.UNAUTHORIZED)
                                     .success(false)
-                                    .message("Invalid token")
+                                    .message(e.getMessage())
                                     .build(), response);
                 }
             }

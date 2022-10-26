@@ -26,17 +26,12 @@ public record JwtAuthenticationServiceImp(
     }
 
     @Override
-    public Boolean authenticateToken(String authorizationHeader) {
+    public void authenticateToken(String authorizationHeader) {
         Authentication authentication = jwtUtils.authenticateToken(authorizationHeader);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         log.info("User {} is authenticated : {} ",
                 authentication.getName(), authentication.isAuthenticated());
-        return authentication.isAuthenticated();
-    }
-
-    @Override
-    public Boolean isTokenExpired(String token) {
-        return jwtUtils.isTokenExpired(token);
+        authentication.isAuthenticated();
     }
 
 }
