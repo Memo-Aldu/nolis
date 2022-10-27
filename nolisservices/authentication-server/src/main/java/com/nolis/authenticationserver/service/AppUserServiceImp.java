@@ -9,6 +9,8 @@ import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.repository.AppUserRepo;
 import com.nolis.authenticationserver.repository.RoleRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -72,6 +74,12 @@ public record AppUserServiceImp(
     public List<AppUser> getUsers() {
         log.info("Getting all users");
         return appUserRepo.findAll();
+    }
+
+    @Override
+    public Page<AppUser> getUsers(Pageable page) {
+        log.info("Getting a page of users");
+        return appUserRepo.findAll(page);
     }
 
     @Override

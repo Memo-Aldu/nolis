@@ -6,6 +6,8 @@ import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.repository.RoleRepo;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +31,12 @@ public class RoleServiceImp implements RoleService {
     public List<Role> getRoles() {
         log.info("Getting all roles");
         return roleRepo.findAll();
+    }
+
+    @Override
+    public Page<Role> getRoles(Pageable page) {
+        log.info("Getting a page pf roles");
+        return roleRepo.findAll(page);
     }
 
     @Override

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface RoleRepo extends MongoRepository<Role, Long> {
+public interface RoleRepo extends MongoRepository<Role, String> {
     Optional<Role> findRoleByName(String name);
     Optional<Role> findRoleByIdOrName(String id, String name);
     void deleteRoleByNameOrId(String name, String id);

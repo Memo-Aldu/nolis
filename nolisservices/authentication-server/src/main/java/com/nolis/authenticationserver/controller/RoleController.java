@@ -7,6 +7,8 @@ import com.nolis.authenticationserver.exception.BadRequestException;
 import com.nolis.authenticationserver.modal.Role;
 import com.nolis.authenticationserver.service.RoleService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +48,27 @@ public record RoleController(
         HttpHeaders headers = new HttpHeaders();
         Map<String, Object> data = Map.of(
                 "roles", roleService.getRoles()
+        );
+        log.debug("Attempting to fetch all roles");
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .message("Roles fetched successfully")
+                        .data(data)
+                        .success(true)
+                        .timestamp(System.currentTimeMillis())
+                        .status(HttpStatus.OK)
+                        .build(),
+                headers);
+    }
+
+    @GetMapping("/get-page")
+    public ResponseEntity<CustomHttpResponseDTO> getRoles(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        HttpHeaders headers = new HttpHeaders();
+        Map<String, Object> data = Map.of(
+                "roles", roleService.getRoles(pageable)
         );
         log.debug("Attempting to fetch all roles");
         return responseHandler.httpResponse(
