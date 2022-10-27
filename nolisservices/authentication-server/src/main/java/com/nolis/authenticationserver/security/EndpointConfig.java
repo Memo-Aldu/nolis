@@ -20,9 +20,9 @@ public class EndpointConfig {
             API_PREFIX+"user/delete", API_PREFIX+"user/logout",
             API_PREFIX+"user/roles"};
     String[] adminEndpoints =  new String[]{
-            API_PREFIX+"user/getall/**", API_PREFIX+"user/save/**",
+            API_PREFIX+"user/get-all/**", API_PREFIX+"user/save/**",
             API_PREFIX+"user/update/**", API_PREFIX+"user/delete/**",
-            API_PREFIX+"role/**", API_PREFIX+"user/addrole", API_PREFIX+"user/roles"
+            API_PREFIX+"role/**", API_PREFIX+"user/add-role", API_PREFIX+"user/roles"
     };
 
     public Predicate<HttpServletRequest> isSecured =

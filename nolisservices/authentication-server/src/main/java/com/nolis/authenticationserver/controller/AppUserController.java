@@ -21,7 +21,13 @@ public record AppUserController(
         AppUserService appUserService,
         ResponseHandler responseHandler) {
 
-    @GetMapping("/getall")
+
+    /**
+     * GET Request api/v1/auth/user/get-all
+     * Gets all the users in the database
+     * @return ResponseEntity<CustomHttpResponseDTO>
+     */
+    @GetMapping("/get-all")
     public ResponseEntity<CustomHttpResponseDTO> getAppUsers() {
         HttpHeaders headers = new HttpHeaders();
         Map<String, Object> data = Map.of(
@@ -83,7 +89,7 @@ public record AppUserController(
                 headers);
     }
 
-    @PatchMapping("/addrole")
+    @PatchMapping("/add-role")
     public ResponseEntity<CustomHttpResponseDTO> addRoleToUser(@Valid @RequestBody AddRoleRequest request) {
         if(!request.isValid()) {
             throw new BadRequestException("Invalid request body for "+request);

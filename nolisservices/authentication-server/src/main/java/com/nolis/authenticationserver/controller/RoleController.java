@@ -41,7 +41,7 @@ public record RoleController(
                 headers);
     }
 
-    @GetMapping("/getall")
+    @GetMapping("/get-all")
     public ResponseEntity<CustomHttpResponseDTO> getRoles() {
         HttpHeaders headers = new HttpHeaders();
         Map<String, Object> data = Map.of(
