@@ -6,6 +6,6 @@ public record AddRoleRequest(
         String roleName
 ) {
     public boolean isValid() {
-        return userId != null || email != null && roleName != null;
+        return ((userId != null || email != null) && roleName != null);
     }
 }

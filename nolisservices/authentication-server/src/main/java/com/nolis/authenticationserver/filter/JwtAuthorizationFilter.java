@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
 @AllArgsConstructor @Slf4j @Component
 public class JwtAuthorizationFilter extends OncePerRequestFilter {

@@ -66,13 +66,13 @@ public record AppUserController(
                 headers);
     }
 
-    @GetMapping("/get")
+    @GetMapping("/")
     public ResponseEntity<CustomHttpResponseDTO> getAppUser(
-            AppUserRequest request) {
+            @RequestBody AppUserRequest request) {
         if(request.isValid()) {
             HttpHeaders headers = new HttpHeaders();
             Map<String, Object> data = Map.of(
-                    "user", appUserService.getAppUserByIdOrEmail(request)
+                    "user", appUserService.getAppUserByIdOrEmailAndPassword(request)
             );
             return responseHandler.httpResponse(
                     CustomHttpResponseDTO.builder()
@@ -132,5 +132,24 @@ public record AppUserController(
                         .status(HttpStatus.OK)
                         .build(),
                 headers);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<CustomHttpResponseDTO> deleteAppUser(@RequestBody AppUserRequest request) {
+        if(request.isValid()) {
+            HttpHeaders headers = new HttpHeaders();
+            appUserService.deleteUserByIdOrEmail(request);
+            return responseHandler.httpResponse(
+                    CustomHttpResponseDTO.builder()
+                            .message("User deleted successfully")
+                            .data(null)
+                            .success(true)
+                            .timestamp(System.currentTimeMillis())
+                            .status(HttpStatus.ACCEPTED)
+                            .build(),
+                    headers);
+        } else {
+            throw new BadRequestException("Invalid request body for "+request);
+        }
     }
 }

@@ -9,4 +9,7 @@ import java.util.Optional;
 public interface AppUserRepo extends MongoRepository<AppUser, String> {
     Optional<AppUser> findAppUserById(String id);
     Optional<AppUser> findAppUserByEmail(String email);
-    Optional<AppUser> findAppUserByEmailOrId(String email, String id);}
+    Optional<AppUser> findAppUserByEmailOrId(String email, String id);
+    void deleteAppUserByEmailOrId(String email, String id);
+    boolean existsAppUserByEmailOrId(String email, String id);
+}

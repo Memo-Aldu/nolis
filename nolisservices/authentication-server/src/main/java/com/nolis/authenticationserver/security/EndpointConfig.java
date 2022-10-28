@@ -12,13 +12,12 @@ public class EndpointConfig {
     private final String API_PREFIX = "/api/v1/auth/";
     String[] openEndpoints = new String[]{
             API_PREFIX+"login", API_PREFIX+"register",
-            API_PREFIX+"token/refresh/", API_PREFIX+"token/validate",
+            API_PREFIX+"token/refresh", API_PREFIX+"token/validate",
             API_PREFIX+"authenticate"};
 
     String[] userEndpoints = new String[]{
             API_PREFIX+"user/profile", API_PREFIX+"user/update",
-            API_PREFIX+"user/delete", API_PREFIX+"user/logout",
-            API_PREFIX+"user/roles"};
+            API_PREFIX+"user/delete", API_PREFIX+"user/logout"};
     String[] adminEndpoints =  new String[]{
             API_PREFIX+"user/get-page/**", API_PREFIX+"user/save/**",
             API_PREFIX+"user/update/**", API_PREFIX+"user/delete/**",
@@ -27,7 +26,7 @@ public class EndpointConfig {
     };
 
     String[] superAdminEndpoints = new String[]{
-            API_PREFIX+"user/**", API_PREFIX+"role/**"
+            API_PREFIX+"**"
     };
 
     public Predicate<HttpServletRequest> isSecured =

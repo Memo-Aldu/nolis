@@ -7,6 +7,7 @@ import com.nolis.authenticationserver.service.AppUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -40,8 +41,12 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(STATELESS)
                 .and().authorizeRequests()
                     .antMatchers(endpointConfig.openEndpoints).permitAll()
+                    .antMatchers(endpointConfig.userEndpoints)
+                        .hasAnyAuthority("ROLE_APP_USER")
                     .antMatchers(endpointConfig.adminEndpoints)
                         .hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN")
+                    .antMatchers(endpointConfig.superAdminEndpoints)
+                        .hasAuthority("ROLE_SUPER_ADMIN")
                 .anyRequest().authenticated()
                 .and().addFilter(jwtUsernameAndPasswordAuthenticationFilter)
                 .addFilterBefore(new JwtAuthorizationFilter(jwtUtils, endpointConfig, responseHandler),

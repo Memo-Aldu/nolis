@@ -10,6 +10,7 @@ public interface RoleRepo extends MongoRepository<Role, String> {
     Optional<Role> findRoleByName(String name);
     Optional<Role> findRoleByIdOrName(String id, String name);
     void deleteRoleByNameOrId(String name, String id);
+    boolean existsRoleByNameOrId(String name, String id);
 
 
 }

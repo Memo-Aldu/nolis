@@ -1,5 +1,6 @@
 package com.nolis.authenticationserver.modal;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 @Data
 @Document("app_users")
- @NoArgsConstructor
+@NoArgsConstructor
 public class AppUser implements UserDetails {
     @Id
     private String id;
@@ -75,6 +76,5 @@ public class AppUser implements UserDetails {
     public boolean isValidEntity() {
         return this.username != null && this.password != null && this.email != null;
     }
-
 
 }

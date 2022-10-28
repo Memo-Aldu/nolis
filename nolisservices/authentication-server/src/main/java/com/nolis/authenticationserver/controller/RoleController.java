@@ -83,8 +83,7 @@ public record RoleController(
     }
 
     @GetMapping("/get")
-    public ResponseEntity<CustomHttpResponseDTO> getRole(
-            RoleRequest request) {
+    public ResponseEntity<CustomHttpResponseDTO> getRole(@RequestBody RoleRequest request) {
         if(!request.isValid()) {
             throw new BadRequestException("Invalid request body for "+request);
         }
@@ -104,22 +103,30 @@ public record RoleController(
                 headers);
     }
 
+    // Does not delete the role from the user
     @DeleteMapping("/delete")
     public ResponseEntity<CustomHttpResponseDTO> deleteRole(@RequestBody RoleRequest request) {
-        if(!request.isValid()) {
-            throw new BadRequestException("Invalid request body for "+request);
-        }
         HttpHeaders headers = new HttpHeaders();
-        roleService.deleteRoleByIdOrName(request);
-        log.debug("Attempting to delete role {}", request);
-        return responseHandler.httpResponse(
-                CustomHttpResponseDTO.builder()
-                        .message("Role deleted successfully")
-                        .data(new HashMap<>())
-                        .success(true)
-                        .timestamp(System.currentTimeMillis())
-                        .status(HttpStatus.OK)
-                        .build(),
-                headers);
+        try {
+            if(!request.isValid()) {
+                throw new BadRequestException("Invalid request body for "+request);
+            }
+            roleService.deleteRoleByIdOrName(request);
+            log.debug("Attempting to delete role {}", request);
+            return responseHandler.httpResponse(
+                    CustomHttpResponseDTO.builder()
+                            .message("Role deleted successfully")
+                            .data(new HashMap<>())
+                            .success(true)
+                            .timestamp(System.currentTimeMillis())
+                            .status(HttpStatus.OK)
+                            .build(),
+                    headers);
+        } catch (Exception e) {
+            throw new BadRequestException(e.getMessage());
+
+        }
+
+
     }
 }

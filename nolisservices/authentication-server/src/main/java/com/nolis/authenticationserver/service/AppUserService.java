@@ -18,4 +18,6 @@ public interface AppUserService extends UserDetailsService {
     List<AppUser> getUsers();
     Page<AppUser> getUsers(Pageable page);
     AppUser getUserByEmail(String email);
+    AppUser getAppUserByIdOrEmailAndPassword(AppUserRequest request);
+    void deleteUserByIdOrEmail(AppUserRequest request);
 }

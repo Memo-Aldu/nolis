@@ -25,6 +25,7 @@ public record AppUserServiceImp(
         AppUserRepo appUserRepo,
         RoleRepo roleRepo,
         BCryptPasswordEncoder passwordEncoder) implements AppUserService {
+    static final Role defaultRole = new Role("ROLE_APP_USER");
 
     @Override
     public AppUser saveAppUser(AppUser appUser) {
@@ -36,6 +37,10 @@ public record AppUserServiceImp(
         if (OptionalAppUser.isPresent()) {
             log.info("User {} already exists", appUser.getEmail());
             throw new AppEntityAlreadyExistException("User already exists");
+        }
+        // if appUser does not have the default role
+        if (!appUser.getAuthorities().contains(new SimpleGrantedAuthority(defaultRole.getName()))) {
+            appUser.addRole(defaultRole);
         }
         return appUserRepo.save(appUser);
     }
@@ -91,6 +96,36 @@ public record AppUserServiceImp(
     }
 
     @Override
+    public AppUser getAppUserByIdOrEmailAndPassword(AppUserRequest request) {
+        log.info("Getting user by id or email and password");
+        AppUser user = appUserRepo.findAppUserByEmailOrId(
+                request.email(), request.id()).orElseThrow(
+                () -> new AppEntityNotFoundException("User not found, request: " + request));
+        if(passwordDoesNotMatch(request.password(), user.getPassword())) {
+            log.warn("User {} does not exist", request);
+            throw new AppEntityNotFoundException("User does not exist, request: " + request);
+        }
+        return user;
+    }
+
+    @Override
+    public void deleteUserByIdOrEmail(AppUserRequest request) {
+        //delete the user and check if the user exists
+        log.info("Deleting user {}", request);
+        AppUser user = appUserRepo.findAppUserByEmailOrId(
+                request.email(), request.id()).orElseThrow(
+                () -> new AppEntityNotFoundException("User not found, request: " + request)
+        );
+        if(passwordDoesNotMatch(request.password(), user.getPassword())) {
+            log.warn("User {} does not exist", request);
+            throw new AppEntityNotFoundException("User does not exist, request: " + request);
+        }
+        else {
+            appUserRepo.deleteAppUserByEmailOrId(request.email(), request.id());
+        }
+    }
+
+    @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return  appUserRepo.findAppUserByEmail(email)
                 .orElseThrow(() -> new AppEntityNotFoundException
@@ -102,6 +137,10 @@ public record AppUserServiceImp(
         appUser.addRole(role);
         appUserRepo.save(appUser);
         return appUser.getAuthorities();
+    }
+
+    private boolean passwordDoesNotMatch(String password, String encodedPassword) {
+        return !passwordEncoder.matches(password, encodedPassword);
     }
 
 }
