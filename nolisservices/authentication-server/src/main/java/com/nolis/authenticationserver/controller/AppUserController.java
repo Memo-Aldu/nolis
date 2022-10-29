@@ -5,7 +5,7 @@ import com.nolis.authenticationserver.DTO.AppUserRequest;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.exception.BadRequestException;
-import com.nolis.authenticationserver.modal.AppUser;
+import com.nolis.authenticationserver.model.AppUser;
 import com.nolis.authenticationserver.service.AppUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;

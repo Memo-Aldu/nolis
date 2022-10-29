@@ -64,7 +64,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 headers(ex.getMessage()));
     }
 
-    @ExceptionHandler({TokenAuthenticationException.class,
+    @ExceptionHandler({TokenAuthenticationException.class, UnauthorizedException.class,
             InvalidTokenException.class, MissingAuthenticationException.class})
     protected ResponseEntity<CustomHttpResponseDTO> handleTokenAuthenticationException(
             RuntimeException ex) {

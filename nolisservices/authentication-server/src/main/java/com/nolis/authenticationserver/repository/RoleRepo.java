@@ -1,6 +1,6 @@
 package com.nolis.authenticationserver.repository;
 
-import com.nolis.authenticationserver.modal.Role;
+import com.nolis.authenticationserver.model.Role;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

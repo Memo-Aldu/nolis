@@ -1,4 +1,4 @@
-package com.nolis.authenticationserver.modal;
+package com.nolis.authenticationserver.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

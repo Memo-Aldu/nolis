@@ -3,7 +3,7 @@ package com.nolis.authenticationserver.service;
 import com.nolis.authenticationserver.DTO.RoleRequest;
 import com.nolis.authenticationserver.exception.AppEntityAlreadyExistException;
 import com.nolis.authenticationserver.exception.AppEntityNotFoundException;
-import com.nolis.authenticationserver.modal.Role;
+import com.nolis.authenticationserver.model.Role;
 import com.nolis.authenticationserver.repository.RoleRepo;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

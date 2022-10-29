@@ -6,6 +6,7 @@ import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.exception.InvalidTokenException;
 import com.nolis.authenticationserver.exception.MissingAuthenticationException;
 import com.nolis.authenticationserver.exception.TokenAuthenticationException;
+import com.nolis.authenticationserver.exception.UnauthorizedException;
 import com.nolis.authenticationserver.security.JwtUtils;
 import com.nolis.authenticationserver.service.JwtAuthenticationService;
 import lombok.extern.slf4j.Slf4j;
@@ -55,10 +56,45 @@ public record AuthController(
             }
         }
         else {
+            log.info("Authentication header must be provided");
+            throw new MissingAuthenticationException("Authentication header must be provided");
+        }
+        return null;
+    }
+
+    //has authority
+    @GetMapping("/has-authority")
+    public ResponseEntity<CustomHttpResponseDTO> hasAuthority(
+            @NonNull HttpServletRequest request) {
+        String scope = request.getHeader("scope");
+        String authorizationHeader = request.getHeader(AUTHORIZATION);
+        log.info("Authorization Header {} and scope {}", authorizationHeader, scope);
+        if(scope == null ) {
+            throw new UnauthorizedException("Scope must be provided");
+        }
+        if (authorizationHeader != null && jwtUtils.tokenStartsWithPrefix(authorizationHeader)) {
+            String token = jwtUtils.getTokenFromHeader(authorizationHeader);
+            log.info("Token {}", token);
+            Map<String, Object> data = Map.of(
+                    "access_token", token);
+                if (jwtAuthenticationService.isAuthorized(token, scope)) {
+                    return responseHandler.httpResponse(
+                            CustomHttpResponseDTO.builder()
+                                    .message("User authorized successfully")
+                                    .data(data)
+                                    .success(true)
+                                    .timestamp(System.currentTimeMillis())
+                                    .status(HttpStatus.OK)
+                                    .build(),
+                            setupResponseHeaders(request));
+                } else {
+                    throw new UnauthorizedException("User is not authorized to access this resource");
+                }
+        }
+        else {
             log.info("Authorization header must be provided");
             throw new MissingAuthenticationException("Authorization header must be provided");
         }
-        return null;
     }
 
     //TODO check if token is expired and is refresh token

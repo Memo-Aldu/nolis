@@ -37,7 +37,15 @@ public record JwtAuthenticationServiceImp(
     @Override
     public boolean isAuthorized(String token, String scope) {
         String[] authorities = jwtUtils.getAuthoritiesFromToken(token);
-        return true;
+        if(authorities != null) {
+            for (String authority : authorities) {
+                log.info("Authority : {}", authority);
+                if (authority.equals(scope)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 

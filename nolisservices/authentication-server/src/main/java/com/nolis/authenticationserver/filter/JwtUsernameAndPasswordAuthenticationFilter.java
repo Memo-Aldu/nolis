@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.DTO.EmailPasswordAuthenticationRequest;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
-import com.nolis.authenticationserver.modal.AppUser;
+import com.nolis.authenticationserver.model.AppUser;
 import com.nolis.authenticationserver.security.JwtConfig;
 import com.nolis.authenticationserver.security.JwtUtils;
 import lombok.AllArgsConstructor;

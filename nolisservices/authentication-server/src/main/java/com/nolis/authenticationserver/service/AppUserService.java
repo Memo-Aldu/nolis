@@ -2,7 +2,7 @@ package com.nolis.authenticationserver.service;
 
 import com.nolis.authenticationserver.DTO.AddRoleRequest;
 import com.nolis.authenticationserver.DTO.AppUserRequest;
-import com.nolis.authenticationserver.modal.AppUser;
+import com.nolis.authenticationserver.model.AppUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

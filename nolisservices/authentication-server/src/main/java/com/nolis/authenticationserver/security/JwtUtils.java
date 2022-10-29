@@ -7,7 +7,7 @@ import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.nolis.authenticationserver.exception.AppEntityNotFoundException;
 import com.nolis.authenticationserver.exception.InvalidTokenException;
-import com.nolis.authenticationserver.modal.AppUser;
+import com.nolis.authenticationserver.model.AppUser;
 import com.nolis.authenticationserver.service.AppUserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

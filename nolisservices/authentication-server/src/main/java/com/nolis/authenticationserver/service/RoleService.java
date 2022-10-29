@@ -1,7 +1,7 @@
 package com.nolis.authenticationserver.service;
 
 import com.nolis.authenticationserver.DTO.RoleRequest;
-import com.nolis.authenticationserver.modal.Role;
+import com.nolis.authenticationserver.model.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
