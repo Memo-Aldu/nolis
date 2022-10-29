@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 @RestController @Slf4j @RequestMapping("/api/v1/auth")
 public record AuthController(
@@ -33,29 +34,31 @@ public record AuthController(
             @NonNull HttpServletRequest request) {
         String authorizationHeader = request.getHeader(AUTHORIZATION);
         log.info("Authorization Header {}", authorizationHeader);
-        if(authorizationHeader != null && jwtUtils.tokenStartsWithPrefix(authorizationHeader)) {
+        if (authorizationHeader != null && jwtUtils.tokenStartsWithPrefix(authorizationHeader)) {
             String token = jwtUtils.getTokenFromHeader(authorizationHeader);
             Map<String, Object> data = Map.of(
                     "access_token", token);
             try {
-                jwtAuthenticationService.authenticateToken(token);
-                return responseHandler.httpResponse(
-                        CustomHttpResponseDTO.builder()
-                                .message("User authenticated successfully")
-                                .data(data)
-                                .success(true)
-                                .timestamp(System.currentTimeMillis())
-                                .status(HttpStatus.OK)
-                                .build(),
-                        addJwtHeaders(authorizationHeader));
+                if (jwtAuthenticationService.authenticateToken(token)) {
+                    return responseHandler.httpResponse(
+                            CustomHttpResponseDTO.builder()
+                                    .message("User authenticated successfully")
+                                    .data(data)
+                                    .success(true)
+                                    .timestamp(System.currentTimeMillis())
+                                    .status(HttpStatus.OK)
+                                    .build(),
+                            setupResponseHeaders(request));
+                }
             } catch (InvalidTokenException e) {
-                throw new TokenAuthenticationException("Invalid Token: " +e.getMessage());
+                throw new TokenAuthenticationException("Invalid Token: " + e.getMessage());
             }
         }
         else {
             log.info("Authorization header must be provided");
             throw new MissingAuthenticationException("Authorization header must be provided");
         }
+        return null;
     }
 
     //TODO check if token is expired and is refresh token
@@ -74,7 +77,7 @@ public record AuthController(
                                 .timestamp(System.currentTimeMillis())
                                 .status(HttpStatus.OK)
                                 .build(),
-                        new HttpHeaders());
+                        setupResponseHeaders(request));
             } catch (Exception e) {
                 log.error("Error logging in : {}", e.getMessage()); //TODO change this to a http error handler
                 return responseHandler.InternalServerErrorResponse(e);
@@ -85,9 +88,13 @@ public record AuthController(
         }
     }
 
-    private HttpHeaders addJwtHeaders(String authorizationHeader) {
+    private HttpHeaders setupResponseHeaders(HttpServletRequest request) {
         HttpHeaders headers = new HttpHeaders();
-        headers.set(AUTHORIZATION, authorizationHeader);
+        headers.set(CONTENT_TYPE, "application/json");
+        headers.set(AUTHORIZATION, request.getHeader(AUTHORIZATION));
+        headers.add("X-Prev-Path", request.getRequestURI());
+        headers.add("X-Request-Path", request.getHeader("X-Request-Path"));
+        headers.add("X-Request-Id", request.getHeader("X-Request-Id"));
         return headers;
     }
 

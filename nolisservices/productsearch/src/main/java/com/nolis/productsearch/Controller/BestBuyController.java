@@ -1,14 +1,14 @@
 package com.nolis.productsearch.Controller;
 
 import com.nolis.productsearch.Request.SearchRequest;
-import com.nolis.productsearch.Service.provider.SearchService;
+import com.nolis.productsearch.Service.SearchService;
 import com.nolis.productsearch.model.Search;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("api/v1/products")
+@RequestMapping("api/v1/product-search")
 public record BestBuyController(SearchService searchService) {
 
 
