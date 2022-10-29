@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -32,12 +33,12 @@ public class AuthRedirectFilter extends AbstractGatewayFilterFactory<AuthRedirec
         return (exchange, chain) -> {
             String path = exchange.getRequest().getPath().toString();
             ServerHttpResponse response = exchange.getResponse();
-            String token = exchange.getRequest().getHeaders().getFirst("Authorization");
-            System.out.println("token: " + token);
+            HttpHeaders headers = exchange.getRequest().getHeaders();
             return webClientBuilder.build()
                     .post()
                     .uri("http://authentication-server-service/api/v1/auth/authenticate")
-                    .header("Authorization", token)
+                    .headers(h -> h.addAll(headers))
+                    .header("X-Request-Path", path)
                     .exchangeToMono(clientResponse -> {
                         if(clientResponse.statusCode().isError()) {
                             //get body message from response
@@ -53,7 +54,10 @@ public class AuthRedirectFilter extends AbstractGatewayFilterFactory<AuthRedirec
                         else {
                             return chain.filter(exchange
                                     .mutate()
-                                    .request(exchange.getRequest().mutate().header("Authorization", token).build())
+                                    .request(exchange.getRequest()
+                                            .mutate()
+                                            .headers(h -> h.addAll(headers))
+                                            .build())
                                     .build());
                         }});
             };

@@ -16,27 +16,35 @@ spring:
         - id: product-search-service
           uri: "lb://product-search-service"
           predicates:
-            Path=/api/v1/products/**
+          - Path=/api/v1/product-search/**
           filters:
+            - AddRequestHeader=X-Request-Id,${spring.cloud.gateway.routes[0].id}
             - AuthRedirectFilter
         - id: eureka-server
           uri: http://localhost:8761
           predicates:
-            Path=/eureka/web
+          - Path=/eureka/web
           filters:
-            SetPath=/
+            - SetPath=/
         - id: eureka-server-static
           uri: http://localhost:8761
           predicates:
-            Path=/eureka/**
+          - Path=/eureka/**
+          filters:
+            - AddRequestHeader=X-Request-Id,${spring.cloud.gateway.routes[2].id}
         - id: authentication-server-service
           uri: "lb://authentication-server-service"
           predicates:
-            Path=/api/v1/auth/**
+          - Path=/api/v1/auth/**
+          filters:
+            - AddRequestHeader=X-Request-Id,${spring.cloud.gateway.routes[3].id}
         - id: authentication-server-service-login
           uri: "lb://authentication-server-service"
           predicates:
-            Path=/api/v1/auth/login/**
+            - Path=/api/v1/auth/login/**
+          filters:
+            - AddRequestHeader=X-Request-Id,${spring.cloud.gateway.routes[4].id}
+
     loadbalancer:
       ribbon:
         enabled: false
