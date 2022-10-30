@@ -40,7 +40,7 @@ public class AuthRedirectFilter extends AbstractGatewayFilterFactory<AuthRedirec
                     .headers(h -> h.addAll(headers))
                     .header("X-Request-Path", path)
                     .exchangeToMono(clientResponse -> {
-                        if(clientResponse.statusCode().isError()) {
+                        if(clientResponse.statusCode().is4xxClientError()) {
                             //get body message from response
                             String message = "Authentication Failed";
                             // print headers
@@ -50,8 +50,17 @@ public class AuthRedirectFilter extends AbstractGatewayFilterFactory<AuthRedirec
                                             "error", clientResponse.headers().header("error_type")
                                     )
                             );
-                        }
-                        else {
+                        } else if(clientResponse.statusCode().is5xxServerError()) {
+                            //get body message from response
+                            String message = "Server Error";
+                            // print headers
+                            return onError(response, message,
+                                    clientResponse.statusCode(), config,
+                                    Map.of(
+                                            "error", clientResponse.headers().header("error_type")
+                                    )
+                            );
+                        } else {
                             return chain.filter(exchange
                                     .mutate()
                                     .request(exchange.getRequest()

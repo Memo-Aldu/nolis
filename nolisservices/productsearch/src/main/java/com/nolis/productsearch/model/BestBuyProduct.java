@@ -1,4 +1,4 @@
-package com.nolis.productsearch.Model;
+package com.nolis.productsearch.model;
 
 import lombok.Builder;
 import lombok.Data;

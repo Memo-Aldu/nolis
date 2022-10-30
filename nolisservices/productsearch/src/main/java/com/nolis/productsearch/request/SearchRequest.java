@@ -1,4 +1,4 @@
-package com.nolis.productsearch.Request;
+package com.nolis.productsearch.request;
 
 import java.util.UUID;
 

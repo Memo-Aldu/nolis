@@ -1,6 +1,7 @@
-package com.nolis.productsearch.Service.Consumer;
+package com.nolis.productsearch.service.consumer;
 
 import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
+import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +29,11 @@ public record AuthServiceImp(
         CustomHttpResponseDTO responseDTO = restTemplate.exchange(
                         AUTH_SERVER_URL, HttpMethod.GET, request,
                 CustomHttpResponseDTO.class).getBody();
-        return responseDTO != null && responseDTO.getData().get(authority) == Boolean.TRUE;
+        if( responseDTO != null && responseDTO.getData().get(authority) == Boolean.TRUE) {
+            return true;
+        }
+        else {
+            throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
+        }
     }
 }

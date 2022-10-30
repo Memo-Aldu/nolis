@@ -76,7 +76,8 @@ public record AuthController(
             String token = jwtUtils.getTokenFromHeader(authorizationHeader);
             log.info("Token {}", token);
             Map<String, Object> data = Map.of(
-                    "access_token", token);
+                    "access_token", token,
+                    scope, true);
                 if (jwtAuthenticationService.isAuthorized(token, scope)) {
                     return responseHandler.httpResponse(
                             CustomHttpResponseDTO.builder()

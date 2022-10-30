@@ -1,8 +1,8 @@
-package com.nolis.productsearch.Service.Producer;
+package com.nolis.productsearch.service.producer;
 
 
-import com.nolis.productsearch.Request.SearchRequest;
-import com.nolis.productsearch.Service.Consumer.AuthService;
+import com.nolis.productsearch.request.SearchRequest;
+import com.nolis.productsearch.service.consumer.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 @Slf4j

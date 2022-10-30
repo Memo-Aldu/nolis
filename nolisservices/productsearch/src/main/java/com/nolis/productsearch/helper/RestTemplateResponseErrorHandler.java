@@ -1,4 +1,4 @@
-package com.nolis.productsearch.Helper;
+package com.nolis.productsearch.helper;
 
 import com.nolis.productsearch.exception.HttpClientErrorException;
 import com.nolis.productsearch.exception.HttpServerErrorException;

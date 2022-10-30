@@ -1,4 +1,4 @@
-package com.nolis.productsearch.Helper;
+package com.nolis.productsearch.helper;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;

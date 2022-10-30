@@ -1,9 +1,9 @@
-package com.nolis.productsearch.Controller;
+package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.Request.SearchRequest;
-import com.nolis.productsearch.Service.Consumer.AuthService;
-import com.nolis.productsearch.Service.Producer.SearchService;
-import com.nolis.productsearch.Model.Search;
+import com.nolis.productsearch.request.SearchRequest;
+import com.nolis.productsearch.service.consumer.AuthService;
+import com.nolis.productsearch.service.producer.SearchService;
+import com.nolis.productsearch.model.Search;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 

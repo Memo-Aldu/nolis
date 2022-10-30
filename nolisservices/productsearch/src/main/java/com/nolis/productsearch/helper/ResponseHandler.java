@@ -1,4 +1,4 @@
-package com.nolis.productsearch.Helper;
+package com.nolis.productsearch.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
