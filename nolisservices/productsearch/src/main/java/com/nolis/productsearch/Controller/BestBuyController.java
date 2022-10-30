@@ -23,7 +23,7 @@ public record BestBuyController(
 
     @GetMapping
     public String hi(HttpServletRequest request, HttpServletResponse response) {
-        if(hasAuthority(request, "ROLE_APP_USER")) {
+        if(hasAuthority(request, "ROLE_BESTBUY_USER")) {
             return "Hello World";
         }
         return "You are not authorized to access this resource";

@@ -6,7 +6,7 @@ import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.exception.InvalidTokenException;
 import com.nolis.authenticationserver.exception.MissingAuthenticationException;
 import com.nolis.authenticationserver.exception.TokenAuthenticationException;
-import com.nolis.authenticationserver.exception.UnauthorizedException;
+import com.nolis.authenticationserver.exception.UnauthorizedTokenException;
 import com.nolis.authenticationserver.security.JwtUtils;
 import com.nolis.authenticationserver.service.JwtAuthenticationService;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +70,7 @@ public record AuthController(
         String authorizationHeader = request.getHeader(AUTHORIZATION);
         log.info("Authorization Header {} and scope {}", authorizationHeader, scope);
         if(scope == null ) {
-            throw new UnauthorizedException("Scope must be provided");
+            throw new UnauthorizedTokenException("Scope must be provided");
         }
         if (authorizationHeader != null && jwtUtils.tokenStartsWithPrefix(authorizationHeader)) {
             String token = jwtUtils.getTokenFromHeader(authorizationHeader);
@@ -88,7 +88,7 @@ public record AuthController(
                                     .build(),
                             setupResponseHeaders(request));
                 } else {
-                    throw new UnauthorizedException("User is not authorized to access this resource");
+                    throw new UnauthorizedTokenException("User is not authorized to access this resource", scope);
                 }
         }
         else {

@@ -64,7 +64,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 headers(ex.getMessage()));
     }
 
-    @ExceptionHandler({TokenAuthenticationException.class, UnauthorizedException.class,
+    @ExceptionHandler({TokenAuthenticationException.class,
             InvalidTokenException.class, MissingAuthenticationException.class})
     protected ResponseEntity<CustomHttpResponseDTO> handleTokenAuthenticationException(
             RuntimeException ex) {
@@ -74,6 +74,32 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .timestamp(System.currentTimeMillis())
                         .status(UNAUTHORIZED)
                         .success(false)
+                        .message(ex.getLocalizedMessage())
+                        .build(),
+                headers(ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedTokenException.class)
+    protected ResponseEntity<CustomHttpResponseDTO> handleUnauthorizedException(
+            UnauthorizedTokenException ex) {
+        if(ex.getScope() == null) {
+            return responseHandler.httpResponse(
+                    CustomHttpResponseDTO.builder()
+                            .data(Map.of("error", ex.getMessage()))
+                            .timestamp(System.currentTimeMillis())
+                            .status(OK)
+                            .success(false)
+                            .message(ex.getLocalizedMessage())
+                            .build(),
+                    headers(ex.getMessage()));
+        }
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .data(Map.of("error", ex.getMessage()))
+                        .timestamp(System.currentTimeMillis())
+                        .status(OK)
+                        .success(true)
+                        .data(Map.of(ex.getScope(), false))
                         .message(ex.getLocalizedMessage())
                         .build(),
                 headers(ex.getMessage()));

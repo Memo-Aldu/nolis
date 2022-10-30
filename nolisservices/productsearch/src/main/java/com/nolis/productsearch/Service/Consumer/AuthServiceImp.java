@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,10 +23,11 @@ public record AuthServiceImp(
         HttpHeaders headers = new HttpHeaders();
         headers.set(AUTHORIZATION,token);
         headers.set("scope", authority);
+        headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> request = new HttpEntity<>(headers);
         CustomHttpResponseDTO responseDTO = restTemplate.exchange(
                         AUTH_SERVER_URL, HttpMethod.GET, request,
                 CustomHttpResponseDTO.class).getBody();
-        return responseDTO != null && responseDTO.isSuccess();
+        return responseDTO != null && responseDTO.getData().get(authority) == Boolean.TRUE;
     }
 }
