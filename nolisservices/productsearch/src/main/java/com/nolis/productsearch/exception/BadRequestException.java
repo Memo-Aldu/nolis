@@ -1,4 +1,4 @@
-package com.nolis.authenticationserver.exception;
+package com.nolis.productsearch.exception;
 
 import java.io.Serial;
 

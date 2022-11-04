@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.json.JSONObject;
 
 @Getter @AllArgsConstructor @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class BestBuyResponseDTO {
+public class BestBuyDTO {
     private String sku;
     private String name;
     private String shortDescription;
@@ -21,14 +22,14 @@ public class BestBuyResponseDTO {
     private String productType;
     private Double regularPrice;
     private Double salePrice;
-    private Integer saleEndDate;
+    private Long saleEndDate;
     private String thumbnailImage;
     private Integer primaryParentCategoryId;
     private String categoryName;
     private Double ehf;
     private String seoText;
     private Integer sellerId;
-    private String seller;
+    private BestBuySeller seller;
     private String highResImage;
     private String altLangSeoText;
     private Integer offerId;
@@ -46,4 +47,11 @@ public class BestBuyResponseDTO {
     private Boolean isMarketplace;
     private Boolean hasFrenchContent;
     private String[] categoryIds;
+
+    @Getter @AllArgsConstructor @NoArgsConstructor
+    static class BestBuySeller {
+        private Boolean canSell;
+        private String id;
+        private String name;
+    }
 }

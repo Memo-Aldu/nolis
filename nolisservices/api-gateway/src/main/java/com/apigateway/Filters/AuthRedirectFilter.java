@@ -39,6 +39,7 @@ public class AuthRedirectFilter extends AbstractGatewayFilterFactory<AuthRedirec
                     .uri("http://authentication-server-service/api/v1/auth/authenticate")
                     .headers(h -> h.addAll(headers))
                     .header("X-Request-Path", path)
+                    .body(Mono.empty(), Void.class)
                     .exchangeToMono(clientResponse -> {
                         if(clientResponse.statusCode().is4xxClientError()) {
                             //get body message from response

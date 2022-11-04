@@ -9,8 +9,8 @@ import java.util.UUID;
 @Builder
 public class Search {
 
-    private UUID uuid;
-    private UUID userId;
+    private String id;
+    private String userId;
     private String query;
     private String searchLocation;
     private Integer pageSize;

@@ -1,7 +1,10 @@
 package com.nolis.productsearch.controller;
 
+import com.nolis.productsearch.DTO.BestBuyDTO;
+import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.request.SearchRequest;
 import com.nolis.productsearch.service.consumer.AuthService;
+import com.nolis.productsearch.service.consumer.BestBuyScrapper;
 import com.nolis.productsearch.service.producer.SearchService;
 import com.nolis.productsearch.model.Search;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +17,11 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Slf4j
 @RestController
-@RequestMapping("api/v1/product-search")
+@RequestMapping("api/v1/product-search/best-buy")
 public record BestBuyController(
         SearchService searchService,
-        AuthService authService
+        AuthService authService,
+        BestBuyScrapper bestBuyScrapper
 ) {
 
 
@@ -34,11 +38,15 @@ public record BestBuyController(
         searchService.registerSearch(searchRequest);
     }
 
-    @GetMapping("/bestbuy")
-    public String SearchBestBuy(@RequestBody SearchRequest searchRequest,
-                                @RequestParam(required = false) String location,
-                                @RequestParam(required = false) Integer page,
-                                @RequestParam(required = false) Integer pageSize) {
+    @GetMapping("/search")
+    public BestBuyDTO[] SearchBestBuy(@RequestBody SearchRequest searchRequest,
+                                    @RequestParam(required = false) String location,
+                                    @RequestParam(required = false) Integer page,
+                                    @RequestParam(required = false) Integer pageSize,
+                                    HttpServletRequest request) {
+        if(!searchRequest.isValidate()) {
+            throw new BadRequestException("Invalid Search Request");
+        }
         Search search = Search.builder()
                 .searchLocation(location)
                 .query(searchRequest.query())
@@ -46,9 +54,13 @@ public record BestBuyController(
                 .page(page)
                 .userId(searchRequest.userId())
                 .build();
-        log.info("Best Buy Search Request {}", search);
 
-        return "Best Buy Search Request " + search.toString();
+        if(hasAuthority(request, "ROLE_BESTBUY_USER")) {
+            log.info("Best Buy Search Request {}", search);
+            return bestBuyScrapper.getProducts(search);
+        }
+        log.error("User is not authorized to access this resource");
+        return null;
     }
 
     private boolean hasAuthority(HttpServletRequest request, String scope) {

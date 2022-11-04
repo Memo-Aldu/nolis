@@ -1,9 +1,12 @@
 package com.nolis.productsearch.request;
 
-import java.util.UUID;
 
 public record SearchRequest(
         String query,
-        UUID userId
+        String userId,
+        String userEmail
 ) {
+    public boolean isValidate() {
+        return query != null && (userId != null || userEmail != null);
+    }
 }
