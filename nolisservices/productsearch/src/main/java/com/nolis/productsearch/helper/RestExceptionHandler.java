@@ -1,6 +1,7 @@
 package com.nolis.productsearch.helper;
 
 import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
+import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.HttpClientErrorException;
 import com.nolis.productsearch.exception.HttpServerErrorException;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
@@ -16,6 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.io.IOException;
 import java.util.Map;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -64,6 +66,21 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .message(ex.getLocalizedMessage())
                         .build(),
                 headers(ex.getLocalizedMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    protected ResponseEntity<CustomHttpResponseDTO> handleBadRequest(
+            BadRequestException ex) {
+
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .data(Map.of("error", ex.getMessage()))
+                        .timestamp(System.currentTimeMillis())
+                        .status(BAD_REQUEST)
+                        .success(false)
+                        .message(ex.getLocalizedMessage())
+                        .build(),
+                headers(ex.getMessage()));
     }
 
     private HttpHeaders headers(String message) {
