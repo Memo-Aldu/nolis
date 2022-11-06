@@ -1229,6 +1229,12 @@ public class RandomUserAgent {
         });
     }
 
+    public static String getRandomSafariUserAgent() {
+        String[] userAgents = uaMap.get("Safari");
+        return userAgents[(int) Math.floor(Math.random() * userAgents.length)];
+    }
+
+
     public static String getRandomUserAgent() {
 
         double rand = Math.random() * 100;

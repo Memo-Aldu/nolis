@@ -12,9 +12,10 @@ public class Search {
     private String id;
     private String userId;
     private String query;
+    private String category;
     private String searchLocation;
-    private Integer pageSize;
-    private Integer page;
+    private String pageSize;
+    private String page;
 
 
 }

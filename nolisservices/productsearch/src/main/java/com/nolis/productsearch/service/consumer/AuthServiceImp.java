@@ -30,11 +30,6 @@ public record AuthServiceImp(
         CustomHttpResponseDTO responseDTO = restTemplate.exchange(
                         AUTH_SERVER_URL, HttpMethod.GET, request,
                 CustomHttpResponseDTO.class).getBody();
-        if( responseDTO != null && responseDTO.getData().get(authority) == Boolean.TRUE) {
-            return true;
-        }
-        else {
-            throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
-        }
+        return responseDTO != null && responseDTO.getData().get(authority) == Boolean.TRUE;
     }
 }

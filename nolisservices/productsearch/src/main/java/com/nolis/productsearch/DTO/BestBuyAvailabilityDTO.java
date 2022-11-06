@@ -1,6 +1,7 @@
 package com.nolis.productsearch.DTO;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,12 +13,19 @@ import java.util.ArrayList;
 @NoArgsConstructor @AllArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class BestBuyAvailabilityDTO {
-    private PickUpInfo pickup;
-    private Shipping shipping;
-    private String sku;
-    private String sellerId;
-    private String saleChannelExclusivity;
-    private Boolean scheduledDelivery;
+    @JsonProperty("availabilities")
+    private ArrayList<ProductAvailability> productsAvailable;
+
+
+    @Getter @AllArgsConstructor @NoArgsConstructor
+    public static class ProductAvailability {
+        private PickUpInfo pickup;
+        private Shipping shipping;
+        private String sku;
+        private String sellerId;
+        private String saleChannelExclusivity;
+        private Boolean scheduledDelivery;
+    }
 
     @Getter @AllArgsConstructor @NoArgsConstructor
     public static class PickUpInfo {

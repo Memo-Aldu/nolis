@@ -1,19 +1,21 @@
 package com.nolis.productsearch.model;
 
+import com.nolis.productsearch.DTO.BestBuyProductDTO;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.UUID;
 
 @Data
 @Builder
 public class BestBuyProduct {
 
-    private UUID uuid;
-    private String SKU;
+    private String id;
+    private String sku;
     private String name;
     private String description;
+    private String productUrl;
     private Integer rating;
     private Integer ratingCount;
     private String url;
@@ -24,5 +26,12 @@ public class BestBuyProduct {
     private String category;
     private Boolean hasPromotion;
     private Boolean isVisible;
+    private Boolean isPreorderable;
+    private Boolean isClearance;
+    private Boolean isInStoreOnly;
+    private Boolean isOnlineOnly;
+    private BestBuyProductDTO.BestBuySeller seller;
+    private ArrayList<Search> searches;
+
 
 }
