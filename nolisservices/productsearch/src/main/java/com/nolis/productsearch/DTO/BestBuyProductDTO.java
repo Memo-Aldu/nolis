@@ -9,28 +9,17 @@ import java.util.Date;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @ToString
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class BestBuyResponseDTO {
+public class BestBuyProductDTO {
     private Integer currentPage;
     private Integer total;
     private Integer totalPages;
     private Integer pageSize;
     private ArrayList<Product> products;
-    private ArrayList<Object> paths;
-    private Object facets;
     private Date lastSearchDate;
-    private Object relatedQueries;
-    private ArrayList<Object> sscs;
-    private Object relatedCategories;
-    private Object selectedFacets;
-    private Object resources;
-    private Object redirectUrl;
-    private Object promotions;
     private Boolean hasBrandStore;
     private String productStatusCode;
-    private Object sscStatusCode;
     @JsonProperty("Brand")
     private String brand;
-    private ArrayList<Object> breadcrumb;
 
     @Getter @AllArgsConstructor @NoArgsConstructor
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)

@@ -1,5 +1,6 @@
-package com.nolis.productsearch.helper;
+package com.nolis.productsearch.Configuration;
 
+import com.nolis.productsearch.helper.RestTemplateResponseErrorHandler;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
