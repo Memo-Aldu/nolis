@@ -14,16 +14,17 @@ public class BestBuyProductDetailDTO {
     private Integer total;
     private Integer totalPages;
     private Integer pageSize;
-    private ArrayList<Product> products;
+    @JsonProperty("products")
+    private ArrayList<ProductDetail> productDetails;
     private Date lastSearchDate;
     private Boolean hasBrandStore;
     private String productStatusCode;
     @JsonProperty("Brand")
     private String brand;
 
-    @Getter @AllArgsConstructor @NoArgsConstructor
+    @Getter @Setter @AllArgsConstructor @NoArgsConstructor
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    public static class Product{
+    public static class ProductDetail{
         private String sku;
         private String name;
         private String shortDescription;

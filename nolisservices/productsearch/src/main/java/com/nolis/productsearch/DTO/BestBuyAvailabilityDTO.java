@@ -31,7 +31,7 @@ public class BestBuyAvailabilityDTO {
     public static class PickUpInfo {
         private String status;
         private Boolean purchasable;
-        private ArrayList<Location> location;
+        private ArrayList<Location> locations;
     }
 
     @Getter @AllArgsConstructor @NoArgsConstructor

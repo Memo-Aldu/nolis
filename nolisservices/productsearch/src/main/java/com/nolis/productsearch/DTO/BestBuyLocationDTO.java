@@ -19,12 +19,12 @@ public class BestBuyLocationDTO {
     @Getter @AllArgsConstructor @NoArgsConstructor @ToString
     public static class LocationRoot {
         @JsonProperty("loc")
-        private Location location;
+        private LocationInfo location;
         @JsonProperty("url")
         private String url;
     }
     @Getter @AllArgsConstructor @NoArgsConstructor @ToString
-    public static class Location {
+    public static class LocationInfo {
         @JsonProperty("address1")
         private String address;
         @JsonProperty("city")

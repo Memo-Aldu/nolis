@@ -1,11 +1,15 @@
 package com.nolis.productsearch.service.consumer;
 
+import com.nolis.productsearch.DTO.BestBuyAvailabilityDTO;
+import com.nolis.productsearch.DTO.BestBuyLocationDTO;
 import com.nolis.productsearch.DTO.BestBuyProductDetailDTO;
+import com.nolis.productsearch.DTO.BestBuyProductsDTO;
 import com.nolis.productsearch.model.Search;
 
-import java.util.ArrayList;
-
 public interface BestBuyScrapper {
-    ArrayList<BestBuyProductDetailDTO.Product> getProductsBySearchQuery(Search search);
+    BestBuyProductsDTO getFullProductsInfoBySearchQuery(Search search);
+    BestBuyLocationDTO getLocation(String location);
+    BestBuyProductDetailDTO getProductsDetailsWithQuery(Search search);
+    BestBuyAvailabilityDTO getAvailability(String sku, String locationCode);
 
 }
