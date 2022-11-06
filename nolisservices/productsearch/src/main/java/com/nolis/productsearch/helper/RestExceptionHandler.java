@@ -1,10 +1,7 @@
 package com.nolis.productsearch.helper;
 
 import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
-import com.nolis.productsearch.exception.BadRequestException;
-import com.nolis.productsearch.exception.HttpClientErrorException;
-import com.nolis.productsearch.exception.HttpServerErrorException;
-import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
+import com.nolis.productsearch.exception.*;
 import lombok.AllArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -17,8 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.io.IOException;
 import java.util.Map;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.HttpStatus.*;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice @AllArgsConstructor
@@ -27,7 +23,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     private final ResponseHandler responseHandler;
 
     @ExceptionHandler(HttpClientErrorException.class)
-    protected ResponseEntity<CustomHttpResponseDTO> handleClientError(
+    protected ResponseEntity<CustomHttpResponseDTO> handleHttpClientError(
             HttpClientErrorException ex) throws IOException {
         return responseHandler.httpResponse(
                 CustomHttpResponseDTO.builder()
@@ -37,12 +33,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .success(false)
                         .message(ex.getLocalizedMessage())
                         .build(),
-                ex.getHttpResponse().getHeaders());
+                headers(ex.getMessage()));
     }
 
-    @ExceptionHandler(HttpServerErrorException.class)
-    protected ResponseEntity<CustomHttpResponseDTO> handleServerError(
-            HttpServerErrorException ex) throws IOException {
+    @ExceptionHandler(HttpExternalServerErrorException.class)
+    protected ResponseEntity<CustomHttpResponseDTO> handleHttpServerError(
+            HttpExternalServerErrorException ex) throws IOException {
         return responseHandler.httpResponse(
                 CustomHttpResponseDTO.builder()
                         .data(Map.of("error", ex.getHttpResponse().getBody().toString()))
@@ -51,7 +47,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .success(false)
                         .message(ex.getLocalizedMessage())
                         .build(),
-                ex.getHttpResponse().getHeaders());
+                headers(ex.getMessage()));
     }
 
     @ExceptionHandler(TokenUnauthorizedToScopeException.class)
@@ -65,7 +61,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .success(false)
                         .message(ex.getLocalizedMessage())
                         .build(),
-                headers(ex.getLocalizedMessage()));
+                headers(ex.getMessage()));
     }
 
     @ExceptionHandler(BadRequestException.class)
@@ -77,6 +73,19 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                         .data(Map.of("error", ex.getMessage()))
                         .timestamp(System.currentTimeMillis())
                         .status(BAD_REQUEST)
+                        .success(false)
+                        .message(ex.getLocalizedMessage())
+                        .build(),
+                headers(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ServerErrorException.class)
+    protected ResponseEntity<CustomHttpResponseDTO> handleServerError(ServerErrorException ex) {
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .data(Map.of("error", ex.getMessage()))
+                        .timestamp(System.currentTimeMillis())
+                        .status(INTERNAL_SERVER_ERROR)
                         .success(false)
                         .message(ex.getLocalizedMessage())
                         .build(),
