@@ -18,7 +18,8 @@ public class EndpointConfig {
 
     String[] userEndpoints = new String[]{
             AUTH_PREFIX+"user/profile", AUTH_PREFIX+"user/update",
-            AUTH_PREFIX+"user/delete", AUTH_PREFIX+"user/logout"};
+            AUTH_PREFIX+"user/delete", AUTH_PREFIX+"user/logout",
+            AUTH_PREFIX+"user/"};
     String[] adminEndpoints =  new String[]{
             AUTH_PREFIX+"user/get-page/**", AUTH_PREFIX+"user/save/**",
             AUTH_PREFIX+"user/update/**", AUTH_PREFIX+"user/delete/**",
