@@ -9,7 +9,7 @@ import java.util.Date;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @ToString
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class BestBuyProductDTO {
+public class BestBuyProductDetailDTO {
     private Integer currentPage;
     private Integer total;
     private Integer totalPages;

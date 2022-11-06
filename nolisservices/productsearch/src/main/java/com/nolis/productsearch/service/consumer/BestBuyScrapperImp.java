@@ -3,7 +3,7 @@ package com.nolis.productsearch.service.consumer;
 import com.nolis.productsearch.Configuration.ExternalApiConfig;
 import com.nolis.productsearch.DTO.BestBuyAvailabilityDTO;
 import com.nolis.productsearch.DTO.BestBuyLocationDTO;
-import com.nolis.productsearch.DTO.BestBuyProductDTO;
+import com.nolis.productsearch.DTO.BestBuyProductDetailDTO;
 import com.nolis.productsearch.exception.HttpClientErrorException;
 import com.nolis.productsearch.exception.ServerErrorException;
 import com.nolis.productsearch.helper.RandomUserAgent;
@@ -42,11 +42,11 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         this.externalApiConfig = externalApiConfig;
     }
     @Override
-    public ArrayList<BestBuyProductDTO.Product> getProductsBySearchQuery(Search search) {
+    public ArrayList<BestBuyProductDetailDTO.Product> getProductsBySearchQuery(Search search) {
         try {
             // time before request
             long startTime = System.currentTimeMillis();
-            CompletableFuture<BestBuyProductDTO> products = getProductsWithQuery(search);
+            CompletableFuture<BestBuyProductDetailDTO> products = getProductsWithQuery(search);
             String locationCodes = "";
             if(!search.getSearchLocation().isEmpty()) {
                 log.info("Location is not empty, calling external api to get location codes");
@@ -86,14 +86,14 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
     }
 
     @Async
-    protected CompletableFuture<BestBuyProductDTO> getProductsWithQuery(Search search) {
+    protected CompletableFuture<BestBuyProductDetailDTO> getProductsWithQuery(Search search) {
         // Todo: custom headers for each request
         HttpEntity<Void> request = new HttpEntity<>(getBestBuyHeaders());
-        HttpEntity<BestBuyProductDTO> productsResponse = restTemplate.exchange(
+        HttpEntity<BestBuyProductDetailDTO> productsResponse = restTemplate.exchange(
                 String.format(externalApiConfig.bestBuyProductUrl(), search.getCategory(),
                         search.getPage(), search.getPageSize(), search.getQuery()),
                 HttpMethod.GET, request,
-                BestBuyProductDTO.class);
+                BestBuyProductDetailDTO.class);
         return CompletableFuture.completedFuture(productsResponse.getBody());
     }
 
@@ -114,9 +114,9 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         }
     }
 
-    private String getSkusFromProducts(ArrayList<BestBuyProductDTO.Product> products) {
+    private String getSkusFromProducts(ArrayList<BestBuyProductDetailDTO.Product> products) {
         return products.stream()
-                .map(BestBuyProductDTO.Product::getSku)
+                .map(BestBuyProductDetailDTO.Product::getSku)
                 .reduce((s, s2) -> s + "%7C" + s2)
                 .orElse("");
     }

@@ -1,6 +1,6 @@
 package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.DTO.BestBuyProductDTO;
+import com.nolis.productsearch.DTO.BestBuyProductDetailDTO;
 import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import com.nolis.productsearch.request.SearchRequest;
@@ -43,7 +43,7 @@ public record BestBuyController(
     }
 
     @GetMapping("/search")
-    public ArrayList<BestBuyProductDTO.Product> SearchBestBuy(
+    public ArrayList<BestBuyProductDetailDTO.Product> SearchBestBuy(
             @RequestBody SearchRequest searchRequest,
             @RequestParam(required = false, defaultValue = "") String location,
             @RequestParam(required = false, defaultValue = "1") String page,
