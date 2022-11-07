@@ -16,6 +16,7 @@ public class Search {
     private String searchLocation;
     private String pageSize;
     private String page;
+    private String inStockOnly;
 
 
 }

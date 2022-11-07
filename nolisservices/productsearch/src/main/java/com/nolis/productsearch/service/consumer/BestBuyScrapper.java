@@ -7,7 +7,7 @@ import com.nolis.productsearch.DTO.BestBuyProductsDTO;
 import com.nolis.productsearch.model.Search;
 
 public interface BestBuyScrapper {
-    BestBuyProductsDTO getFullProductsInfoBySearchQuery(Search search);
+    BestBuyProductsDTO getProductsInfoBySearchQuery(Search search);
     BestBuyLocationDTO getLocation(String location);
     BestBuyProductDetailDTO getProductsDetailsWithQuery(Search search);
     BestBuyAvailabilityDTO getAvailability(String sku, String locationCode);

@@ -2,10 +2,7 @@ package com.nolis.productsearch.DTO;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.ArrayList;
 
@@ -27,7 +24,8 @@ public class BestBuyAvailabilityDTO {
         private Boolean scheduledDelivery;
     }
 
-    @Getter @AllArgsConstructor @NoArgsConstructor
+    @Getter @Setter
+    @AllArgsConstructor @NoArgsConstructor
     public static class PickUpInfo {
         private String status;
         private Boolean purchasable;

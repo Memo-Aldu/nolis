@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -45,7 +46,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         this.externalApiConfig = externalApiConfig;
     }
     @Override
-    public BestBuyProductsDTO getFullProductsInfoBySearchQuery(Search search) {
+    public BestBuyProductsDTO getProductsInfoBySearchQuery(Search search) {
         try {
             // time before request
             long startTime = System.currentTimeMillis();
@@ -63,7 +64,10 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
             log.info("Async calls took: {} ms", endTime - startTime);
             String skus = getSkusFromProductsDetails(products.get().getProductDetails());
             BestBuyAvailabilityDTO availability = getAvailability(skus, locationCodes);
-            return getProducts(availability, products.get());
+
+            return Objects.equals(search.getInStockOnly(), "true") ?
+                    getProducts(getInventoryWithStock(availability), products.get())
+                    : getProducts(availability.getProductsAvailable(), products.get());
 
         }catch (HttpClientErrorException e ) {
             log.error("Error while fetching products from BestBuy {}", e.getMessage());
@@ -156,17 +160,19 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
                 .orElse("");
     }
 
-    private BestBuyProductsDTO getProducts(BestBuyAvailabilityDTO availability,
+    private BestBuyProductsDTO getProducts( ArrayList<BestBuyAvailabilityDTO.ProductAvailability> availability,
                                             BestBuyProductDetailDTO productDetails) {
         ArrayList<BestBuyProductsDTO.Product> products  = productDetails.getProductDetails().stream()
                 .map(product -> {
-                    BestBuyAvailabilityDTO.ProductAvailability availability1 = availability.getProductsAvailable()
+                    BestBuyAvailabilityDTO.ProductAvailability availabilityItem = availability
                             .stream()
-                            .filter(availability2 -> availability2.getSku().equals(product.getSku()))
+                            .filter(x -> x.getSku().equals(product.getSku()))
                             .findFirst()
                             .orElse(null);
-                    return new BestBuyProductsDTO.Product(product, availability1);
+                    return new BestBuyProductsDTO.Product(product, availabilityItem);
                 })
+                // remove if no availability
+                .filter(x -> x.getProductAvailability() != null)
                 // add the host name to the product url
                 .peek(product -> product.getProductDetail()
                         .setProductUrl("https://" + HOST_NAME + product.getProductDetail().getProductUrl()))
@@ -174,7 +180,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
 
         return BestBuyProductsDTO.builder()
                 .currentPage(productDetails.getCurrentPage())
-                .pageSize(productDetails.getPageSize())
+                .pageSize(products.size())
                 .totalPages(productDetails.getTotalPages())
                 .total(productDetails.getTotal())
                 .productStatusCode(productDetails.getProductStatusCode())
@@ -182,6 +188,22 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
                 .hasBrandStore(productDetails.getHasBrandStore())
                 .products(products)
                 .build();
+    }
+
+    private ArrayList<BestBuyAvailabilityDTO.ProductAvailability> getInventoryWithStock(
+            BestBuyAvailabilityDTO availability) {
+
+        availability.getProductsAvailable().forEach(av -> {
+            if(av.getPickup().getLocations() != null) {
+                av.getPickup().getLocations().removeIf(location ->
+                        location.getQuantityOnHand() <= 0);
+            }
+        });
+        return availability.getProductsAvailable().stream()
+                // doesn't count for backorder; if backorder-able will still return true
+                .filter(availability2 -> (availability2.getShipping().getQuantityRemaining() > 0 &&
+                        availability2.getShipping().getPurchasable()) || availability2.getPickup().getPurchasable())
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
     }
 
     private HttpHeaders getInventoryHeaders() {

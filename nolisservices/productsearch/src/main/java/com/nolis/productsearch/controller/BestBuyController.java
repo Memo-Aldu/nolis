@@ -1,5 +1,6 @@
 package com.nolis.productsearch.controller;
 
+import com.nolis.productsearch.DTO.BestBuyProductsDTO;
 import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
@@ -52,6 +53,7 @@ public record BestBuyController(
             @RequestParam(required = false, defaultValue = "") String location,
             @RequestParam(required = false, defaultValue = "1") String page,
             @RequestParam(required = false, defaultValue = "2") String pageSize,
+            @RequestParam(required = false, defaultValue = "false") String inStockOnly,
             @RequestParam(required = false, defaultValue = "") String category, HttpServletRequest request) {
         if(!searchRequest.isValidate()) {
             throw new BadRequestException("Invalid Search Request");
@@ -59,25 +61,39 @@ public record BestBuyController(
         Search search = Search.builder()
                 .searchLocation(location)
                 .query(searchRequest.query())
+                .inStockOnly(inStockOnly)
                 .category(category)
                 .pageSize(pageSize)
                 .page(page)
                 .userId(searchRequest.userId())
                 .build();
-
+        // TODO: Add search to database
+        // TODO: add a role for inStockOnly
         if(hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
+            BestBuyProductsDTO products = bestBuyScrapper.getProductsInfoBySearchQuery(search);
             Map<String, Object> data = Map.of(
-                    "best-buy", bestBuyScrapper.getFullProductsInfoBySearchQuery(search));
-            return responseHandler.httpResponse(
-                    CustomHttpResponseDTO.builder()
-                            .message("Search Request Successful")
-                            .data(data)
-                            .success(true)
-                            .timestamp(System.currentTimeMillis())
-                            .status(HttpStatus.OK)
-                            .build(),
-                    setupResponseHeaders(request));
+                    "best-buy", products);
+            return products.getProducts().size() > 0 ?
+                    responseHandler.httpResponse(
+                            CustomHttpResponseDTO.builder()
+                                    .message("Search Request Successful")
+                                    .data(data)
+                                    .success(true)
+                                    .timestamp(System.currentTimeMillis())
+                                    .status(HttpStatus.OK)
+                                    .build(),
+                            setupResponseHeaders(request)) :
+                    responseHandler.httpResponse(
+                            CustomHttpResponseDTO.builder()
+                                    .message("No products found with the given search criteria "
+                                            + search.getQuery())
+                                    .data(data)
+                                    .success(true)
+                                    .timestamp(System.currentTimeMillis())
+                                    .status(HttpStatus.OK)
+                                    .build(),
+                            setupResponseHeaders(request));
         } else {
             log.error("User is not authorized to access this resource");
             throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
