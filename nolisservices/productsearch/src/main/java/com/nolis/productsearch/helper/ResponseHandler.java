@@ -1,7 +1,7 @@
 package com.nolis.productsearch.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
+import com.nolis.productsearch.DTO.bestbuy.CustomHttpResponseDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;

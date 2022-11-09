@@ -1,6 +1,6 @@
 package com.nolis.productsearch.helper;
 
-import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
+import com.nolis.productsearch.DTO.bestbuy.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.*;
 import lombok.AllArgsConstructor;
 import org.springframework.core.Ordered;

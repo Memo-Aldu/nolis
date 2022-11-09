@@ -1,4 +1,4 @@
-package com.nolis.productsearch.DTO;
+package com.nolis.productsearch.DTO.bestbuy;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -1,7 +1,7 @@
 package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.DTO.BestBuyProductsDTO;
-import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
+import com.nolis.productsearch.DTO.bestbuy.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import com.nolis.productsearch.helper.ResponseHandler;

@@ -1,7 +1,6 @@
 package com.nolis.productsearch.service.consumer;
 
-import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
-import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
+import com.nolis.productsearch.DTO.bestbuy.CustomHttpResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;

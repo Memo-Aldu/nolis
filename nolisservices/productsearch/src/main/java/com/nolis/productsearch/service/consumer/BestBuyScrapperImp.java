@@ -1,10 +1,10 @@
 package com.nolis.productsearch.service.consumer;
 
-import com.nolis.productsearch.Configuration.ExternalApiConfig;
-import com.nolis.productsearch.DTO.BestBuyAvailabilityDTO;
-import com.nolis.productsearch.DTO.BestBuyLocationDTO;
-import com.nolis.productsearch.DTO.BestBuyProductDetailDTO;
-import com.nolis.productsearch.DTO.BestBuyProductsDTO;
+import com.nolis.productsearch.configuration.ExternalApiConfig;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyAvailabilityDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyLocationDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyProductDetailDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
 import com.nolis.productsearch.exception.HttpClientErrorException;
 import com.nolis.productsearch.exception.ServerErrorException;
 import com.nolis.productsearch.helper.RandomUserAgent;

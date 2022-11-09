@@ -1,6 +1,6 @@
 package com.nolis.productsearch.model;
 
-import com.nolis.productsearch.DTO.BestBuyProductDetailDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyProductDetailDTO;
 import lombok.Builder;
 import lombok.Data;
 
