@@ -45,6 +45,13 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         this.restTemplate = restTemplate;
         this.externalApiConfig = externalApiConfig;
     }
+
+    /**
+     * This method is used to get product details and stock information
+     * from the BestBuy api .
+     * @param search Search
+     * @return BestBuyProductsDTO
+     */
     @Override
     public BestBuyProductsDTO getProductsInfoBySearchQuery(Search search) {
         try {
@@ -78,6 +85,11 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         }
     }
 
+    /**
+     * Get products details from BestBuy api
+     * @param search Search
+     * @return BestBuyProductDetailDTO
+     */
     @Override
     public BestBuyProductDetailDTO getProductsDetailsWithQuery(Search search) {
         // Todo: custom headers for each request
@@ -91,6 +103,11 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         return productsResponse.getBody();
     }
 
+    /**
+     * Get location codes from location name ex: "Mississauga, ON"
+     * @param location string
+     * @return BestBuyLocationDTO
+     */
     @Override
     public BestBuyLocationDTO getLocation(String location) {
         // Todo: custom headers for each request
@@ -103,10 +120,16 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         return locationResponse.getBody();
     }
 
+    /**
+     * Get availabilities(stock info) of a string of skus
+     * @param skus string
+     * @param locationCodes string
+     * @return BestBuyAvailabilityDTO
+     */
     @Override
-    public BestBuyAvailabilityDTO getAvailability(String sku, String locationCode) {
+    public BestBuyAvailabilityDTO getAvailability(String skus, String locationCodes) {
         HttpEntity<Object> request = new HttpEntity<>(getInventoryHeaders());
-        String url = MessageFormat.format(externalApiConfig.bestBuyInventoryUrl(), locationCode, sku);
+        String url = MessageFormat.format(externalApiConfig.bestBuyInventoryUrl(), locationCodes, skus);
         try {
             URI uri = new URI(url);
             log.info("Availability uri: {}", uri);
@@ -120,6 +143,11 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         }
     }
 
+    /**
+     * Async call to get the location codes from a location name ex: "Mississauga, ON"
+     * @param location string
+     * @return CompletableFuture<BestBuyLocationDTO>
+     */
     @Async
     protected CompletableFuture<BestBuyLocationDTO> getLocationAsync(String location) {
         // Todo: custom headers for each request
@@ -132,6 +160,11 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         return CompletableFuture.completedFuture(locationResponse.getBody());
     }
 
+    /**
+     * Async call to the product details api
+     * @param search Search
+     * @return CompletableFuture<BestBuyProductDetailDTO>
+     */
     @Async
     protected CompletableFuture<BestBuyProductDetailDTO> getProductsDetailsWithQueryAsync(Search search) {
         // Todo: custom headers for each request
