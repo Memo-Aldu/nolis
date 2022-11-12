@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record ExternalApiConfig(
         String bestBuyProductUrl,
         String bestBuyLocationUrl,
-        String  bestBuyInventoryUrl
+        String  bestBuyInventoryUrl,
+        String amazonProductUrl
 ) {
 }

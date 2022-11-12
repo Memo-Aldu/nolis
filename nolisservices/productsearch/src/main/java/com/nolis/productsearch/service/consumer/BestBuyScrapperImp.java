@@ -5,6 +5,7 @@ import com.nolis.productsearch.DTO.bestbuy.BestBuyAvailabilityDTO;
 import com.nolis.productsearch.DTO.bestbuy.BestBuyLocationDTO;
 import com.nolis.productsearch.DTO.bestbuy.BestBuyProductDetailDTO;
 import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
+import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.HttpClientErrorException;
 import com.nolis.productsearch.exception.ServerErrorException;
 import com.nolis.productsearch.helper.RandomUserAgent;
@@ -20,12 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.http.client.params.ClientPNames.COOKIE_POLICY;
@@ -70,6 +70,9 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
             long endTime = System.currentTimeMillis();
             log.info("Async calls took: {} ms", endTime - startTime);
             String skus = getSkusFromProductsDetails(products.get().getProductDetails());
+            if(skus.isEmpty()) {
+                return new BestBuyProductsDTO();
+            }
             BestBuyAvailabilityDTO availability = getAvailability(skus, locationCodes);
 
             return Objects.equals(search.getInStockOnly(), "true") ?
@@ -79,7 +82,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         }catch (HttpClientErrorException e ) {
             log.error("Error while fetching products from BestBuy {}", e.getMessage());
             throw new HttpClientErrorException(e.getMessage(), e.getHttpResponse());
-        } catch ( InterruptedException | ExecutionException e) {
+        } catch (Exception e) {
             log.error("Error while fetching products from BestBuy {}", e.getMessage());
             throw new ServerErrorException(e.getMessage(), e);
         }
@@ -138,8 +141,9 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
                     BestBuyAvailabilityDTO.class);
             log.info("availability response: {}", availabilityResponse.getBody());
             return availabilityResponse.getBody();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new BadRequestException("Invalid search query");
         }
     }
 

@@ -5,14 +5,13 @@ import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
 import com.nolis.productsearch.DTO.bestbuy.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
+import com.nolis.productsearch.helper.ControllerHelper;
 import com.nolis.productsearch.helper.ResponseHandler;
 import com.nolis.productsearch.request.SearchRequest;
-import com.nolis.productsearch.service.consumer.AuthService;
 import com.nolis.productsearch.service.consumer.BestBuyScrapper;
 import com.nolis.productsearch.service.producer.SearchService;
 import com.nolis.productsearch.model.Search;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,21 +20,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
-
 @Slf4j
 @RestController
 @RequestMapping("api/v1/product-search/best-buy")
 public record BestBuyController(
+        ControllerHelper controllerHelper,
         SearchService searchService,
-        AuthService authService,
         BestBuyScrapper bestBuyScrapper,
         ResponseHandler responseHandler) {
 
     @GetMapping
     public String hi(HttpServletRequest request, HttpServletResponse response) {
-        if(hasAuthority(request, "ROLE_BESTBUY_USER")) {
+        if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             return "Hello World";
         } else {
             log.error("User is not authorized to access this resource");
@@ -65,12 +61,12 @@ public record BestBuyController(
                 .userId(searchRequest.userId())
                 .build();
 
-        if(hasAuthority(request, "ROLE_BESTBUY_USER")) {
+        if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
             BestBuyProductDetailDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
             Map<String, Object> data = Map.of(
                     "best-buy", products);
-            return products.getProductDetails().size() > 0 ?
+            return products.getProductDetails() != null && products.getProductDetails().size() > 0 ?
                     responseHandler.httpResponse(
                             CustomHttpResponseDTO.builder()
                                     .message("Search Request Successful")
@@ -79,7 +75,7 @@ public record BestBuyController(
                                     .timestamp(System.currentTimeMillis())
                                     .status(HttpStatus.OK)
                                     .build(),
-                            setupResponseHeaders(request)) :
+                            controllerHelper.setupResponseHeaders(request)) :
                     responseHandler.httpResponse(
                             CustomHttpResponseDTO.builder()
                                     .message("No products found with the given search criteria "
@@ -89,7 +85,7 @@ public record BestBuyController(
                                     .timestamp(System.currentTimeMillis())
                                     .status(HttpStatus.OK)
                                     .build(),
-                            setupResponseHeaders(request));
+                            controllerHelper.setupResponseHeaders(request));
         } else {
             log.error("User is not authorized to access this resource");
             throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
@@ -118,12 +114,12 @@ public record BestBuyController(
                 .build();
         // TODO: Add search to database
         // TODO: add a role for inStockOnly
-        if(hasAuthority(request, "ROLE_BESTBUY_USER")) {
+        if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
             BestBuyProductsDTO products = bestBuyScrapper.getProductsInfoBySearchQuery(search);
             Map<String, Object> data = Map.of(
                     "best-buy", products);
-            return products.getProducts().size() > 0 ?
+            return  products.getProducts() != null && products.getProducts().size() > 0 ?
                     responseHandler.httpResponse(
                             CustomHttpResponseDTO.builder()
                                     .message("Search Request Successful")
@@ -132,7 +128,7 @@ public record BestBuyController(
                                     .timestamp(System.currentTimeMillis())
                                     .status(HttpStatus.OK)
                                     .build(),
-                            setupResponseHeaders(request)) :
+                            controllerHelper.setupResponseHeaders(request)) :
                     responseHandler.httpResponse(
                             CustomHttpResponseDTO.builder()
                                     .message("No products found with the given search criteria "
@@ -142,26 +138,11 @@ public record BestBuyController(
                                     .timestamp(System.currentTimeMillis())
                                     .status(HttpStatus.OK)
                                     .build(),
-                            setupResponseHeaders(request));
+                            controllerHelper.setupResponseHeaders(request));
         } else {
             log.error("User is not authorized to access this resource");
             throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
         }
-    }
-
-    private boolean hasAuthority(HttpServletRequest request, String scope) {
-        String authorizationHeader = request.getHeader(AUTHORIZATION);
-        return authService.hasAuthority(authorizationHeader, scope);
-    }
-
-    private HttpHeaders setupResponseHeaders(HttpServletRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(CONTENT_TYPE, "application/json");
-        headers.set(AUTHORIZATION, request.getHeader(AUTHORIZATION));
-        headers.add("X-Prev-Path", request.getRequestURI());
-        headers.add("X-Request-Path", request.getHeader("X-Request-Path"));
-        headers.add("X-Request-Id", request.getHeader("X-Request-Id"));
-        return headers;
     }
 
 }
