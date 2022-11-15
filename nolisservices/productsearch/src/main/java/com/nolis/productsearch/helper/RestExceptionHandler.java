@@ -1,6 +1,6 @@
 package com.nolis.productsearch.helper;
 
-import com.nolis.productsearch.DTO.bestbuy.CustomHttpResponseDTO;
+import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

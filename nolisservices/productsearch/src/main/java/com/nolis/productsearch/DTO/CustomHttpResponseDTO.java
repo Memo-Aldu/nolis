@@ -1,4 +1,4 @@
-package com.nolis.productsearch.DTO.bestbuy;
+package com.nolis.productsearch.DTO;
 
 
 import lombok.AllArgsConstructor;

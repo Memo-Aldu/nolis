@@ -3,7 +3,7 @@ package com.nolis.productsearch.service.consumer;
 import com.nolis.productsearch.configuration.ExternalApiConfig;
 import com.nolis.productsearch.DTO.bestbuy.BestBuyAvailabilityDTO;
 import com.nolis.productsearch.DTO.bestbuy.BestBuyLocationDTO;
-import com.nolis.productsearch.DTO.bestbuy.BestBuyProductDetailDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyProductResponseDTO;
 import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
 import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.HttpClientErrorException;
@@ -37,13 +37,14 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
     @Qualifier("withoutEureka")
     private final RestTemplate restTemplate;
     private final ExternalApiConfig externalApiConfig;
-
+    private final RandomUserAgent randomUserAgent;
     private final String HOST_NAME = "www.bestbuy.ca";
 
     public BestBuyScrapperImp(@Qualifier("withoutEureka") RestTemplate restTemplate,
-                              ExternalApiConfig externalApiConfig) {
+                              ExternalApiConfig externalApiConfig, RandomUserAgent randomUserAgent) {
         this.restTemplate = restTemplate;
         this.externalApiConfig = externalApiConfig;
+        this.randomUserAgent = randomUserAgent;
     }
 
     /**
@@ -57,7 +58,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         try {
             // time before request
             long startTime = System.currentTimeMillis();
-            CompletableFuture<BestBuyProductDetailDTO> products = getProductsDetailsWithQueryAsync(search);
+            CompletableFuture<BestBuyProductResponseDTO> products = getProductsDetailsWithQueryAsync(search);
             String locationCodes = "";
 
             if(!search.getSearchLocation().isEmpty()) {
@@ -94,15 +95,15 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return BestBuyProductDetailDTO
      */
     @Override
-    public BestBuyProductDetailDTO getProductsDetailsWithQuery(Search search) {
+    public BestBuyProductResponseDTO getProductsDetailsWithQuery(Search search) {
         // Todo: custom headers for each request
         HttpEntity<Void> request = new HttpEntity<>(getBestBuyHeaders());
         String url = String.format(externalApiConfig.bestBuyProductUrl(), search.getCategory(),
                 search.getPage(), search.getPageSize(), search.getQuery());
         log.info("Product details url: {}", url);
-        HttpEntity<BestBuyProductDetailDTO> productsResponse = restTemplate.exchange(
+        HttpEntity<BestBuyProductResponseDTO> productsResponse = restTemplate.exchange(
                 url, HttpMethod.GET, request,
-                BestBuyProductDetailDTO.class);
+                BestBuyProductResponseDTO.class);
         return productsResponse.getBody();
     }
 
@@ -170,21 +171,21 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return CompletableFuture<BestBuyProductDetailDTO>
      */
     @Async
-    protected CompletableFuture<BestBuyProductDetailDTO> getProductsDetailsWithQueryAsync(Search search) {
+    protected CompletableFuture<BestBuyProductResponseDTO> getProductsDetailsWithQueryAsync(Search search) {
         // Todo: custom headers for each request
         HttpEntity<Void> request = new HttpEntity<>(getBestBuyHeaders());
         String url = String.format(externalApiConfig.bestBuyProductUrl(), search.getCategory(),
                 search.getPage(), search.getPageSize(), search.getQuery());
         log.info("Async product details url: {}", url);
-        HttpEntity<BestBuyProductDetailDTO> productsResponse = restTemplate.exchange(
+        HttpEntity<BestBuyProductResponseDTO> productsResponse = restTemplate.exchange(
                 url, HttpMethod.GET, request,
-                BestBuyProductDetailDTO.class);
+                BestBuyProductResponseDTO.class);
         return CompletableFuture.completedFuture(productsResponse.getBody());
     }
 
-    private String getSkusFromProductsDetails(ArrayList<BestBuyProductDetailDTO.ProductDetail> products) {
+    private String getSkusFromProductsDetails(ArrayList<BestBuyProductResponseDTO.ProductDetail> products) {
         return products.stream()
-                .map(BestBuyProductDetailDTO.ProductDetail::getSku)
+                .map(BestBuyProductResponseDTO.ProductDetail::getSku)
                 .reduce((s, s2) -> s + "%7C" + s2)
                 .orElse("");
     }
@@ -197,8 +198,8 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
                 .orElse("");
     }
 
-    private BestBuyProductsDTO getProducts( ArrayList<BestBuyAvailabilityDTO.ProductAvailability> availability,
-                                            BestBuyProductDetailDTO productDetails) {
+    private BestBuyProductsDTO getProducts(ArrayList<BestBuyAvailabilityDTO.ProductAvailability> availability,
+                                           BestBuyProductResponseDTO productDetails) {
         ArrayList<BestBuyProductsDTO.Product> products  = productDetails.getProductDetails().stream()
                 .map(product -> {
                     BestBuyAvailabilityDTO.ProductAvailability availabilityItem = availability
@@ -219,10 +220,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
                 .currentPage(productDetails.getCurrentPage())
                 .pageSize(products.size())
                 .totalPages(productDetails.getTotalPages())
-                .total(productDetails.getTotal())
-                .productStatusCode(productDetails.getProductStatusCode())
-                .brand(productDetails.getBrand())
-                .hasBrandStore(productDetails.getHasBrandStore())
+                .total(productDetails.getTotalItems())
                 .products(products)
                 .build();
     }
@@ -249,7 +247,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         headers.add("Connection", "keep-alive");
         headers.add("accept", APPLICATION_JSON);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("user-agent", RandomUserAgent.getRandomSafariUserAgent());
+        headers.add("user-agent", randomUserAgent.getRandomUserAgent());
         headers.set("Host", "www.bestbuy.ca");
         return headers;
     }
@@ -263,7 +261,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         headers.set(CONTENT_TYPE, APPLICATION_JSON);
         headers.set("accept", "application/json");
         // safari useragent because it's faster with bestbuy
-        headers.add("user-agent", RandomUserAgent.getRandomSafariUserAgent());
+        headers.add("user-agent", randomUserAgent.getRandomUserAgent());
         headers.add("Cookie", "SERVERID=c52");
         return headers;
     }

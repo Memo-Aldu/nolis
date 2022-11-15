@@ -9,9 +9,10 @@ import java.util.Date;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @ToString
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class BestBuyProductDetailDTO {
+public class BestBuyProductResponseDTO {
     private Integer currentPage;
-    private Integer total;
+    @JsonProperty("total")
+    private Integer totalItems;
     private Integer totalPages;
     private Integer pageSize;
     @JsonProperty("products")

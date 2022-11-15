@@ -1,8 +1,8 @@
 package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.DTO.bestbuy.BestBuyProductDetailDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyProductResponseDTO;
 import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
-import com.nolis.productsearch.DTO.bestbuy.CustomHttpResponseDTO;
+import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import com.nolis.productsearch.helper.ControllerHelper;
@@ -63,7 +63,7 @@ public record BestBuyController(
 
         if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
-            BestBuyProductDetailDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
+            BestBuyProductResponseDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
             Map<String, Object> data = Map.of(
                     "best-buy", products);
             return products.getProductDetails() != null && products.getProductDetails().size() > 0 ?

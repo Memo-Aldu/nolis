@@ -12,16 +12,13 @@ public class BestBuyProductsDTO {
     private Integer total;
     private Integer totalPages;
     private Integer pageSize;
-    private Boolean hasBrandStore;
-    private String productStatusCode;
-    private String brand;
     ArrayList<Product> products;
 
     @Getter @Setter
     @NoArgsConstructor @AllArgsConstructor
     @ToString @Builder
     public static class Product {
-        private BestBuyProductDetailDTO.ProductDetail productDetail;
+        private BestBuyProductResponseDTO.ProductDetail productDetail;
         private BestBuyAvailabilityDTO.ProductAvailability productAvailability;
     }
 }

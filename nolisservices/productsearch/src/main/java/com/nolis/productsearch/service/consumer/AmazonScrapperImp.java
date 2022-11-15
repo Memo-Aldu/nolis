@@ -1,6 +1,6 @@
 package com.nolis.productsearch.service.consumer;
 
-import com.nolis.productsearch.DTO.amazon.AmazonProductDetailDTO;
+import com.nolis.productsearch.DTO.amazon.AmazonProductDTO;
 import com.nolis.productsearch.DTO.amazon.AmazonProductResponseDTO;
 import com.nolis.productsearch.configuration.ExternalApiConfig;
 import com.nolis.productsearch.helper.RandomUserAgent;
@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -30,15 +31,17 @@ public class AmazonScrapperImp implements AmazonScrapper    {
     private final RestTemplate restTemplate;
     private final ExternalApiConfig externalApiConfig;
     private final String HOST_NAME = "www.amazon.ca";
+    private final RandomUserAgent randomUserAgent;
 
     public AmazonScrapperImp(@Qualifier("withoutEureka") RestTemplate restTemplate,
-                              ExternalApiConfig externalApiConfig) {
+                             ExternalApiConfig externalApiConfig, RandomUserAgent randomUserAgent) {
         this.restTemplate = restTemplate;
         this.externalApiConfig = externalApiConfig;
+        this.randomUserAgent = randomUserAgent;
     }
 
     @Override
-    public ArrayList<AmazonProductDetailDTO> getProductsBySearchQuery(Search search) {
+    public AmazonProductDTO getProductsBySearchQuery(Search search) {
         HttpEntity<Void> request = new HttpEntity<>(getAmazonHeader());
         String url = String.format(externalApiConfig.amazonProductUrl(),
                 search.getQuery().replace(" ", "+"),
@@ -47,42 +50,49 @@ public class AmazonScrapperImp implements AmazonScrapper    {
         HttpEntity<String> productsResponse = restTemplate.exchange(
                 url, HttpMethod.POST, request,
                 String.class);
-        ArrayList<AmazonProductResponseDTO> responseArray;
+        AmazonProductDTO response;
+        ArrayList<JSONObject> responseJsonArray;
         try {
-            responseArray = convertStringResponseToDTO(Objects.requireNonNull(productsResponse.getBody()));
+            responseJsonArray = convertStringResponseToJsonArray(Objects.requireNonNull(productsResponse.getBody()));
+            response = setAmazonProducts(responseJsonArray, setMetaData(responseJsonArray));
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        return getProductDetailsFromHtmlString(responseArray);
+        return response;
     }
 
-    private ArrayList<AmazonProductDetailDTO> getProductDetailsFromHtmlString(ArrayList<AmazonProductResponseDTO> productsResponse) {
+    private ArrayList<AmazonProductDTO.Product> getProductFromHtmlString(ArrayList<AmazonProductResponseDTO> productsResponse) {
         return productsResponse.stream()
                 .map(
                         productResponse -> {
+                            log.info("Product html: {}", productResponse.getHtml());
+                            // fix reviews not showing sometimes, and sometimes I get different html
                             Document doc = Jsoup.parse(productResponse.getHtml());
                             String stock = doc.select("span.a-color-price").text();
-                            String reviewCount= doc.select("span.s-link-centralized-style").text();
+                            String reviewCount= doc.select("" +
+                                    "div.a-spacing-top-micro a.s-underline-link-text span.a-size-base").text();
+                            String reviewAverage = doc.select("span.a-icon-alt").text();
                             Boolean isPrime = doc.select("i.a-icon-prime").size() > 0;
-                            log.info("reviewCount: {}", reviewCount);
-                            return AmazonProductDetailDTO.builder()
+                            Element priceEle = doc.select("span.a-offscreen").first();
+                            String price = priceEle != null ? priceEle.text() : "";
+
+                            return AmazonProductDTO.Product.builder()
                                     .isPrime(isPrime)
                                     .name(doc.select("h2").text())
-                                    .price(doc.select("span.a-offscreen").text())
+                                    .price(price)
                                     .image(doc.select("img").attr("src"))
-                                    .productUrl("https://" + HOST_NAME +
-                                            doc.select("a").attr("href"))
+                                    .productUrl("https://" + HOST_NAME + "/dp/" + productResponse.getAsin())
                                     .asin(productResponse.getAsin())
-                                    .customerReviewAverage(doc.select("span.a-icon-alt").text())
+                                    .customerReviewAverage(Objects.equals(reviewAverage, "") ? 0 :
+                                            Double.parseDouble(reviewAverage.split(" ")[0]))
                                     .customerReviewCount(Objects.equals(reviewCount, "") ? "0" : reviewCount)
                                     .availability(Objects.equals(stock, "") ? "In Stock" : stock)
-
                                     .build();
                         }
                 ).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private ArrayList<AmazonProductResponseDTO> convertStringResponseToDTO(String response) throws JSONException {
+    private ArrayList<JSONObject> convertStringResponseToJsonArray(String response) throws JSONException {
         ArrayList<String> list = new ArrayList<>(Arrays.asList(response.split("&&&")));
         list.remove(list.size() - 1);
         return list.stream().map(
@@ -99,36 +109,74 @@ public class AmazonScrapperImp implements AmazonScrapper    {
                         throw new RuntimeException(e);
                     }
                 }
-        ).map(
-                jsonObject -> {
-                        try {
-                            if(jsonObject.has("asin") && jsonObject.getString("asin").length() > 0) {
-                                return new AmazonProductResponseDTO(
-                                        jsonObject.getString("asin"),
-                                        jsonObject.getString("html"),
-                                        jsonObject.getInt("index")
-                                );
-                            }
-                        } catch (JSONException e) {
-                            log.info("Error while parsing json: {}", e.getMessage());
-                            return null;
-                        }
-                    return null;
-                }
-        ).filter(
-                Objects::nonNull
         ).collect(Collectors.toCollection(ArrayList::new));
     }
 
+    private AmazonProductDTO setMetaData(ArrayList<JSONObject> responseJsonArray) throws JSONException {
+        JSONObject metadata = responseJsonArray.get(1).getJSONObject("metadata");
+        int totalItems = metadata.getInt("totalResultCount");
+        int pageSize = metadata.getInt("asinOnPageCount");
+        int totalPages = (int) Math.ceil((double)totalItems / pageSize);
+        return AmazonProductDTO.builder()
+                .totalItems(totalItems)
+                .totalPages(totalPages)
+                .currentPage(metadata.getInt("page"))
+                .pageSize(pageSize)
+                .build();
+    }
+    
+    private AmazonProductDTO setAmazonProducts(ArrayList<JSONObject> responseJsonArray, AmazonProductDTO amazonProductDTO) {
+        amazonProductDTO.setProducts(
+                getProductFromHtmlString(
+                        responseJsonArray.stream()
+                                .filter(
+                                        // filter the products
+                                        jsonObject -> {
+                                            try {
+                                                return jsonObject.has("asin") && jsonObject.getString("asin").length() > 0;
+                                            } catch (JSONException e) {
+                                                log.info("Error while parsing json: {}", e.getMessage());
+                                                return false;
+                                            }
+                                        }
+                                ).map(
+                                        // map the products
+                                        jsonObject -> {
+                                            try {
+                                                return new AmazonProductResponseDTO(
+                                                        jsonObject.getString("asin"),
+                                                        jsonObject.getString("html"),
+                                                        jsonObject.getInt("index")
+                                                );
+                                            } catch (JSONException e) {
+                                                log.info("Error while parsing json: {}", e.getMessage());
+                                                return null;
+                                            }
+                                        }
+                                ).filter(
+                                        // filter the null products
+                                        Objects::nonNull
+                                ).collect(Collectors.toCollection(ArrayList::new))
+                ));
+        return amazonProductDTO;
+    }
     private HttpHeaders getAmazonHeader() {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Host", HOST_NAME);
         headers.set("authority", HOST_NAME);
-        headers.set("Accept", "application/json");
-        headers.set("Accept-Language", "en-US,en;q=0.5");
+        headers.set("accept", "text/html,application/xhtml+xml,application/xml;" +
+                "q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+        headers.set("accept-language", "en-US,en;q=0.5");
+        headers.set("pragma", "no-cache");
+        headers.set("viewport-width", String.valueOf(Math.floor(Math.random() * 2100) + 1200));
         headers.set("Accept-Encoding", "gzip, deflate, br");
+        headers.set("downlink", String.valueOf(Math.floor(Math.random() * 30) + 10));
+        headers.set("device-memory", String.valueOf(Math.floor(Math.random() * 16) + 8));
+        headers.set("rtt", String.valueOf(Math.floor(Math.random() * 100) + 50));
+        headers.set("ect", "4g");
+        headers.set("cookie", "");
         headers.set("Connection", "keep-alive");
-        headers.add("user-agent", RandomUserAgent.getRandomSafariUserAgent());
+        headers.add("user-agent", randomUserAgent.getRandomUserAgent());
         return headers;
     }
 }

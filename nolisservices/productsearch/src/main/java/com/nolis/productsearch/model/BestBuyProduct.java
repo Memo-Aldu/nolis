@@ -1,6 +1,6 @@
 package com.nolis.productsearch.model;
 
-import com.nolis.productsearch.DTO.bestbuy.BestBuyProductDetailDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyProductResponseDTO;
 import lombok.Builder;
 import lombok.Data;
 
@@ -30,7 +30,7 @@ public class BestBuyProduct {
     private Boolean isClearance;
     private Boolean isInStoreOnly;
     private Boolean isOnlineOnly;
-    private BestBuyProductDetailDTO.BestBuySeller seller;
+    private BestBuyProductResponseDTO.BestBuySeller seller;
     private ArrayList<Search> searches;
 
 
