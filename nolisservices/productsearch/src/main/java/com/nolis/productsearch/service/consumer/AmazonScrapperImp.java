@@ -15,12 +15,14 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 
@@ -59,6 +61,17 @@ public class AmazonScrapperImp implements AmazonScrapper    {
             throw new RuntimeException(e);
         }
         return response;
+    }
+
+    /**
+     * Async call to get the best buy product details and stock information
+     * @param search Search
+     * @return CompletableFuture<BestBuyLocationDTO>
+     */
+    @Async
+    @Override
+    public CompletableFuture<AmazonProductDTO> getProductsBySearchQueryAsync(Search search) {
+        return CompletableFuture.completedFuture(getProductsBySearchQuery(search));
     }
 
     private ArrayList<AmazonProductDTO.Product> getProductFromHtmlString(ArrayList<AmazonProductResponseDTO> productsResponse) {

@@ -1,6 +1,5 @@
 package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.DTO.bestbuy.BestBuyProductResponseDTO;
 import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
 import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.BadRequestException;
@@ -17,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 @Slf4j
@@ -29,15 +27,6 @@ public record BestBuyController(
         BestBuyScrapper bestBuyScrapper,
         ResponseHandler responseHandler) {
 
-    @GetMapping
-    public String hi(HttpServletRequest request, HttpServletResponse response) {
-        if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
-            return "Hello World";
-        } else {
-            log.error("User is not authorized to access this resource");
-            throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
-        }
-    }
     @PostMapping()
     public void registerSearch(@RequestBody SearchRequest searchRequest) {
         log.info("New Search Request {}", searchRequest);
@@ -63,29 +52,8 @@ public record BestBuyController(
 
         if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
-            BestBuyProductResponseDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
-            Map<String, Object> data = Map.of(
-                    "best-buy", products);
-            return products.getProductDetails() != null && products.getProductDetails().size() > 0 ?
-                    responseHandler.httpResponse(
-                            CustomHttpResponseDTO.builder()
-                                    .message("Search Request Successful")
-                                    .data(data)
-                                    .success(true)
-                                    .timestamp(System.currentTimeMillis())
-                                    .status(HttpStatus.OK)
-                                    .build(),
-                            controllerHelper.setupResponseHeaders(request)) :
-                    responseHandler.httpResponse(
-                            CustomHttpResponseDTO.builder()
-                                    .message("No products found with the given search criteria "
-                                            + search.getQuery())
-                                    .data(data)
-                                    .success(true)
-                                    .timestamp(System.currentTimeMillis())
-                                    .status(HttpStatus.OK)
-                                    .build(),
-                            controllerHelper.setupResponseHeaders(request));
+            BestBuyProductsDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
+            return getCustomHttpResponseDTOResponseEntity(request, search, products);
         } else {
             log.error("User is not authorized to access this resource");
             throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
@@ -116,33 +84,44 @@ public record BestBuyController(
         // TODO: add a role for inStockOnly
         if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
-            BestBuyProductsDTO products = bestBuyScrapper.getProductsInfoBySearchQuery(search);
-            Map<String, Object> data = Map.of(
-                    "best-buy", products);
-            return  products.getProducts() != null && products.getProducts().size() > 0 ?
-                    responseHandler.httpResponse(
-                            CustomHttpResponseDTO.builder()
-                                    .message("Search Request Successful")
-                                    .data(data)
-                                    .success(true)
-                                    .timestamp(System.currentTimeMillis())
-                                    .status(HttpStatus.OK)
-                                    .build(),
-                            controllerHelper.setupResponseHeaders(request)) :
-                    responseHandler.httpResponse(
-                            CustomHttpResponseDTO.builder()
-                                    .message("No products found with the given search criteria "
-                                            + search.getQuery())
-                                    .data(data)
-                                    .success(true)
-                                    .timestamp(System.currentTimeMillis())
-                                    .status(HttpStatus.OK)
-                                    .build(),
-                            controllerHelper.setupResponseHeaders(request));
+            BestBuyProductsDTO products = bestBuyScrapper.getProductsBySearchQuery(search);
+            return getCustomHttpResponseDTOResponseEntity(request, search, products);
         } else {
             log.error("User is not authorized to access this resource");
             throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
         }
     }
 
+    /**
+     * returns an appropriate response entity based on the data
+     * @param request HttpServletRequest
+     * @param search Search
+     * @param products BestBuyProductsDTO
+     * @return ResponseEntity<CustomHttpResponseDTO>
+     */
+    private ResponseEntity<CustomHttpResponseDTO> getCustomHttpResponseDTOResponseEntity(
+            HttpServletRequest request, Search search, BestBuyProductsDTO products) {
+        Map<String, Object> data = Map.of(
+                "best-buy", products);
+        return products.getProducts() != null && products.getProducts().size() > 0 ?
+                responseHandler.httpResponse(
+                        CustomHttpResponseDTO.builder()
+                                .message("Search Request Successful")
+                                .data(data)
+                                .success(true)
+                                .timestamp(System.currentTimeMillis())
+                                .status(HttpStatus.OK)
+                                .build(),
+                        controllerHelper.setupResponseHeaders(request)) :
+                responseHandler.httpResponse(
+                        CustomHttpResponseDTO.builder()
+                                .message("No products found with the given search criteria "
+                                        + search.getQuery())
+                                .data(data)
+                                .success(true)
+                                .timestamp(System.currentTimeMillis())
+                                .status(HttpStatus.OK)
+                                .build(),
+                        controllerHelper.setupResponseHeaders(request));
+    }
 }

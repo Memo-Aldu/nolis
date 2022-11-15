@@ -9,16 +9,9 @@ import java.util.ArrayList;
 @ToString @Builder
 public class BestBuyProductsDTO {
     private Integer currentPage;
-    private Integer total;
+    private Integer totalItems;
     private Integer totalPages;
     private Integer pageSize;
-    ArrayList<Product> products;
+    ArrayList<BestBuyProductResponseDTO.ProductDetail> products;
 
-    @Getter @Setter
-    @NoArgsConstructor @AllArgsConstructor
-    @ToString @Builder
-    public static class Product {
-        private BestBuyProductResponseDTO.ProductDetail productDetail;
-        private BestBuyAvailabilityDTO.ProductAvailability productAvailability;
-    }
 }

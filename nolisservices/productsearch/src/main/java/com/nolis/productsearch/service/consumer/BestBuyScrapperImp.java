@@ -54,7 +54,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return BestBuyProductsDTO
      */
     @Override
-    public BestBuyProductsDTO getProductsInfoBySearchQuery(Search search) {
+    public BestBuyProductsDTO getProductsBySearchQuery(Search search) {
         try {
             // time before request
             long startTime = System.currentTimeMillis();
@@ -90,12 +90,23 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
     }
 
     /**
+     * Async call to get the best buy product details and stock information
+     * @param search Search
+     * @return CompletableFuture<BestBuyLocationDTO>
+     */
+    @Async
+    @Override
+    public CompletableFuture<BestBuyProductsDTO> getProductsBySearchQueryAsync(Search search) {
+        return CompletableFuture.completedFuture(getProductsBySearchQuery(search));
+    }
+
+    /**
      * Get products details from BestBuy api
      * @param search Search
      * @return BestBuyProductDetailDTO
      */
     @Override
-    public BestBuyProductResponseDTO getProductsDetailsWithQuery(Search search) {
+    public BestBuyProductsDTO getProductsDetailsWithQuery(Search search) {
         // Todo: custom headers for each request
         HttpEntity<Void> request = new HttpEntity<>(getBestBuyHeaders());
         String url = String.format(externalApiConfig.bestBuyProductUrl(), search.getCategory(),
@@ -104,7 +115,17 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         HttpEntity<BestBuyProductResponseDTO> productsResponse = restTemplate.exchange(
                 url, HttpMethod.GET, request,
                 BestBuyProductResponseDTO.class);
-        return productsResponse.getBody();
+        BestBuyProductResponseDTO body = productsResponse.getBody();
+        if(Objects.isNull(body)) {
+            return new BestBuyProductsDTO();
+        }
+        return BestBuyProductsDTO.builder()
+                .totalItems(body.getTotalItems())
+                .currentPage(body.getCurrentPage())
+                .pageSize(body.getPageSize())
+                .totalPages(body.getTotalPages())
+                .products(body.getProductDetails())
+                .build();
     }
 
     /**
@@ -200,27 +221,27 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
 
     private BestBuyProductsDTO getProducts(ArrayList<BestBuyAvailabilityDTO.ProductAvailability> availability,
                                            BestBuyProductResponseDTO productDetails) {
-        ArrayList<BestBuyProductsDTO.Product> products  = productDetails.getProductDetails().stream()
-                .map(product -> {
+        ArrayList<BestBuyProductResponseDTO.ProductDetail> products  = productDetails.getProductDetails().stream()
+                .peek(product -> {
                     BestBuyAvailabilityDTO.ProductAvailability availabilityItem = availability
                             .stream()
                             .filter(x -> x.getSku().equals(product.getSku()))
                             .findFirst()
                             .orElse(null);
-                    return new BestBuyProductsDTO.Product(product, availabilityItem);
+                    product.setAvailability(availabilityItem);
                 })
                 // remove if no availability
-                .filter(x -> x.getProductAvailability() != null)
+                .filter(x -> x.getAvailability() != null)
                 // add the host name to the product url
-                .peek(product -> product.getProductDetail()
-                        .setProductUrl("https://" + HOST_NAME + product.getProductDetail().getProductUrl()))
+                .peek(product -> product
+                        .setProductUrl("https://" + HOST_NAME + product.getProductUrl()))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
         return BestBuyProductsDTO.builder()
                 .currentPage(productDetails.getCurrentPage())
                 .pageSize(products.size())
                 .totalPages(productDetails.getTotalPages())
-                .total(productDetails.getTotalItems())
+                .totalItems(productDetails.getTotalItems())
                 .products(products)
                 .build();
     }

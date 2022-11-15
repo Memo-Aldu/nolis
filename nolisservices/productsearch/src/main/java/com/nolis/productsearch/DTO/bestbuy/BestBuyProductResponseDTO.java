@@ -47,6 +47,7 @@ public class BestBuyProductResponseDTO {
         private Boolean isOnlineOnly;
         private Boolean isVisible;
         private Boolean isPreorderable;
+        private BestBuyAvailabilityDTO.ProductAvailability availability;
     }
 
     @Getter @AllArgsConstructor @NoArgsConstructor
