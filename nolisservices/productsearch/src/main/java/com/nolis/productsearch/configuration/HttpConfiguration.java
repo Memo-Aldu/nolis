@@ -1,4 +1,4 @@
-package com.nolis.productsearch.Configuration;
+package com.nolis.productsearch.configuration;
 
 import com.nolis.productsearch.helper.RestTemplateResponseErrorHandler;
 import org.springframework.beans.factory.annotation.Qualifier;

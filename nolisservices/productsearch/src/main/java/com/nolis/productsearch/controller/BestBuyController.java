@@ -1,41 +1,32 @@
 package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.DTO.BestBuyProductDTO;
+import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
+import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.BadRequestException;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
+import com.nolis.productsearch.helper.ControllerHelper;
+import com.nolis.productsearch.helper.ResponseHandler;
 import com.nolis.productsearch.request.SearchRequest;
-import com.nolis.productsearch.service.consumer.AuthService;
 import com.nolis.productsearch.service.consumer.BestBuyScrapper;
 import com.nolis.productsearch.service.producer.SearchService;
 import com.nolis.productsearch.model.Search;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.util.ArrayList;
-
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("api/v1/product-search/best-buy")
 public record BestBuyController(
+        ControllerHelper controllerHelper,
         SearchService searchService,
-        AuthService authService,
-        BestBuyScrapper bestBuyScrapper
-) {
+        BestBuyScrapper bestBuyScrapper,
+        ResponseHandler responseHandler) {
 
-    @GetMapping
-    public String hi(HttpServletRequest request, HttpServletResponse response) {
-        if(hasAuthority(request, "ROLE_BESTBUY_USER")) {
-            return "Hello World";
-        } else {
-            log.error("User is not authorized to access this resource");
-            throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
-        }
-    }
     @PostMapping()
     public void registerSearch(@RequestBody SearchRequest searchRequest) {
         log.info("New Search Request {}", searchRequest);
@@ -43,18 +34,15 @@ public record BestBuyController(
     }
 
     @GetMapping("/search")
-    public ArrayList<BestBuyProductDTO.Product> SearchBestBuy(
+    public ResponseEntity<CustomHttpResponseDTO> SearchBestBuy(
             @RequestBody SearchRequest searchRequest,
-            @RequestParam(required = false, defaultValue = "") String location,
-            @RequestParam(required = false, defaultValue = "1") String page,
-            @RequestParam(required = false, defaultValue = "2") String pageSize,
-            @RequestParam(required = false, defaultValue = "") String category,
-            HttpServletRequest request) {
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "2") Integer pageSize,
+            @RequestParam(required = false, defaultValue = "") String category, HttpServletRequest request) {
         if(!searchRequest.isValidate()) {
             throw new BadRequestException("Invalid Search Request");
         }
         Search search = Search.builder()
-                .searchLocation(location)
                 .query(searchRequest.query())
                 .category(category)
                 .pageSize(pageSize)
@@ -62,18 +50,78 @@ public record BestBuyController(
                 .userId(searchRequest.userId())
                 .build();
 
-        if(hasAuthority(request, "ROLE_BESTBUY_USER")) {
+        if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
-            return bestBuyScrapper.getProductsBySearchQuery(search);
+            BestBuyProductsDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
+            return getCustomHttpResponseDTOResponseEntity(request, search, products);
         } else {
             log.error("User is not authorized to access this resource");
             throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
         }
     }
 
-    private boolean hasAuthority(HttpServletRequest request, String scope) {
-        String authorizationHeader = request.getHeader(AUTHORIZATION);
-        return authService.hasAuthority(authorizationHeader, scope);
+    @GetMapping("/search/stock")
+    public ResponseEntity<CustomHttpResponseDTO> SearchBestBuyStock(
+            @RequestBody SearchRequest searchRequest,
+            @RequestParam(required = false, defaultValue = "") String location,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "2") Integer pageSize,
+            @RequestParam(required = false, defaultValue = "false") Boolean inStockOnly,
+            @RequestParam(required = false, defaultValue = "") String category, HttpServletRequest request) {
+        if(!searchRequest.isValidate()) {
+            throw new BadRequestException("Invalid Search Request");
+        }
+        Search search = Search.builder()
+                .searchLocation(location)
+                .query(searchRequest.query())
+                .inStockOnly(inStockOnly)
+                .category(category)
+                .pageSize(pageSize)
+                .page(page)
+                .userId(searchRequest.userId())
+                .build();
+        // TODO: Add search to database
+        // TODO: add a role for inStockOnly
+        if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
+            log.info("Best Buy Search Request {}", search);
+            BestBuyProductsDTO products = bestBuyScrapper.getProductsBySearchQuery(search);
+            return getCustomHttpResponseDTOResponseEntity(request, search, products);
+        } else {
+            log.error("User is not authorized to access this resource");
+            throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
+        }
     }
 
+    /**
+     * returns an appropriate response entity based on the data
+     * @param request HttpServletRequest
+     * @param search Search
+     * @param products BestBuyProductsDTO
+     * @return ResponseEntity<CustomHttpResponseDTO>
+     */
+    private ResponseEntity<CustomHttpResponseDTO> getCustomHttpResponseDTOResponseEntity(
+            HttpServletRequest request, Search search, BestBuyProductsDTO products) {
+        Map<String, Object> data = Map.of(
+                "best-buy", products);
+        return products.getProducts() != null && products.getProducts().size() > 0 ?
+                responseHandler.httpResponse(
+                        CustomHttpResponseDTO.builder()
+                                .message("Search Request Successful")
+                                .data(data)
+                                .success(true)
+                                .timestamp(System.currentTimeMillis())
+                                .status(HttpStatus.OK)
+                                .build(),
+                        controllerHelper.setupResponseHeaders(request)) :
+                responseHandler.httpResponse(
+                        CustomHttpResponseDTO.builder()
+                                .message("No products found with the given search criteria "
+                                        + search.getQuery())
+                                .data(data)
+                                .success(true)
+                                .timestamp(System.currentTimeMillis())
+                                .status(HttpStatus.OK)
+                                .build(),
+                        controllerHelper.setupResponseHeaders(request));
+    }
 }

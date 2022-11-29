@@ -1,4 +1,4 @@
-package com.nolis.productsearch.DTO;
+package com.nolis.productsearch.DTO.bestbuy;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,21 +9,23 @@ import java.util.Date;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @ToString
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class BestBuyProductDTO {
+public class BestBuyProductResponseDTO {
     private Integer currentPage;
-    private Integer total;
+    @JsonProperty("total")
+    private Integer totalItems;
     private Integer totalPages;
     private Integer pageSize;
-    private ArrayList<Product> products;
+    @JsonProperty("products")
+    private ArrayList<ProductDetail> productDetails;
     private Date lastSearchDate;
     private Boolean hasBrandStore;
     private String productStatusCode;
     @JsonProperty("Brand")
     private String brand;
 
-    @Getter @AllArgsConstructor @NoArgsConstructor
+    @Getter @Setter @AllArgsConstructor @NoArgsConstructor
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    public static class Product{
+    public static class ProductDetail{
         private String sku;
         private String name;
         private String shortDescription;
@@ -45,6 +47,7 @@ public class BestBuyProductDTO {
         private Boolean isOnlineOnly;
         private Boolean isVisible;
         private Boolean isPreorderable;
+        private BestBuyAvailabilityDTO.ProductAvailability availability;
     }
 
     @Getter @AllArgsConstructor @NoArgsConstructor

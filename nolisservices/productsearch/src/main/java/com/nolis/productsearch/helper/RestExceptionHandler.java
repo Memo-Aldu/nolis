@@ -3,6 +3,7 @@ package com.nolis.productsearch.helper;
 import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
 import com.nolis.productsearch.exception.*;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -17,7 +18,7 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.*;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@ControllerAdvice @AllArgsConstructor
+@ControllerAdvice @AllArgsConstructor @Slf4j
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final ResponseHandler responseHandler;
@@ -53,6 +54,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(TokenUnauthorizedToScopeException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleUnauthorizedExceptions(
             TokenUnauthorizedToScopeException ex) {
+        log.warn("Sending an unauthorized response: {}", ex.getMessage());
         return responseHandler.httpResponse(
                 CustomHttpResponseDTO.builder()
                         .data(Map.of("error", ex.getMessage()))
@@ -67,7 +69,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleBadRequest(
             BadRequestException ex) {
-
+        log.warn("Sending a bad request response: {}", ex.getMessage());
         return responseHandler.httpResponse(
                 CustomHttpResponseDTO.builder()
                         .data(Map.of("error", ex.getMessage()))
@@ -81,6 +83,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ServerErrorException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleServerError(ServerErrorException ex) {
+        log.warn("Sending a server error response: {}", ex.getMessage());
         return responseHandler.httpResponse(
                 CustomHttpResponseDTO.builder()
                         .data(Map.of("error", ex.getMessage()))

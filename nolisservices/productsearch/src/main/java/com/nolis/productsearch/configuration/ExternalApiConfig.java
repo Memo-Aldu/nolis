@@ -1,4 +1,4 @@
-package com.nolis.productsearch.Configuration;
+package com.nolis.productsearch.configuration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record ExternalApiConfig(
         String bestBuyProductUrl,
         String bestBuyLocationUrl,
-        String  bestBuyInventoryUrl
+        String  bestBuyInventoryUrl,
+        String amazonProductUrl
 ) {
 }

@@ -14,8 +14,9 @@ public class Search {
     private String query;
     private String category;
     private String searchLocation;
-    private String pageSize;
-    private String page;
+    private Integer pageSize;
+    private Integer page;
+    private Boolean inStockOnly;
 
 
 }

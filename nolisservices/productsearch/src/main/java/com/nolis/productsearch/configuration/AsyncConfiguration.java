@@ -1,4 +1,4 @@
-package com.nolis.productsearch.Configuration;
+package com.nolis.productsearch.configuration;
 
 
 import org.springframework.context.annotation.Bean;

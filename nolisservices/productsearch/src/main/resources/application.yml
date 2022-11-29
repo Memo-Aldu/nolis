@@ -23,4 +23,5 @@ application:
     api:
       bestBuyProductUrl: "https://www.bestbuy.ca/api/v2/json/search?categoryid=%s&lang=en-CA&page=%s&pageSize=%s&path=&query=%s"
       bestBuyLocationUrl: "https://stores.bestbuy.ca/en-ca/search?q=%s"
-      bestBuyInventoryUrl: "https://www.bestbuy.ca/ecomm-api/availability/products?accept=application%2Fvnd.bestbuy.standardproduct.v1%2Bjson&accept-language=en-CAl&ocations={0}&skus={1}"
+      bestBuyInventoryUrl: "https://www.bestbuy.ca/ecomm-api/availability/products?accept=application%2Fvnd.bestbuy.standardproduct.v1%2Bjson&accept-language=en-CA&locations={0}&skus={1}"
+      amazonProductUrl: "https://www.amazon.ca/s/query?k=%s&page=%s"
