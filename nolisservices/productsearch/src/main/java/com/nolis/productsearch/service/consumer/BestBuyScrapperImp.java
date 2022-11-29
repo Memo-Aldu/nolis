@@ -72,11 +72,18 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
             log.info("Async calls took: {} ms", endTime - startTime);
             String skus = getSkusFromProductsDetails(products.get().getProductDetails());
             if(skus.isEmpty()) {
-                return new BestBuyProductsDTO();
+                return  BestBuyProductsDTO.builder()
+                        .totalItems(0)
+                        .currentPage(search.getPage())
+                        .totalPages(0)
+                        .pageSize(0)
+                        .products(new ArrayList<>())
+                        .totalItems(0)
+                        .build();
             }
             BestBuyAvailabilityDTO availability = getAvailability(skus, locationCodes);
 
-            return Objects.equals(search.getInStockOnly(), "true") ?
+            return search.getInStockOnly() ?
                     getProducts(getInventoryWithStock(availability), products.get())
                     : getProducts(availability.getProductsAvailable(), products.get());
 
@@ -90,7 +97,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
     }
 
     /**
-     * Async call to get the best buy product details and stock information
+     * Async call to get the Best Buy product details and stock information
      * @param search Search
      * @return CompletableFuture<BestBuyLocationDTO>
      */

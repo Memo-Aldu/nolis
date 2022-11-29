@@ -36,8 +36,8 @@ public record BestBuyController(
     @GetMapping("/search")
     public ResponseEntity<CustomHttpResponseDTO> SearchBestBuy(
             @RequestBody SearchRequest searchRequest,
-            @RequestParam(required = false, defaultValue = "1") String page,
-            @RequestParam(required = false, defaultValue = "2") String pageSize,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "2") Integer pageSize,
             @RequestParam(required = false, defaultValue = "") String category, HttpServletRequest request) {
         if(!searchRequest.isValidate()) {
             throw new BadRequestException("Invalid Search Request");
@@ -64,9 +64,9 @@ public record BestBuyController(
     public ResponseEntity<CustomHttpResponseDTO> SearchBestBuyStock(
             @RequestBody SearchRequest searchRequest,
             @RequestParam(required = false, defaultValue = "") String location,
-            @RequestParam(required = false, defaultValue = "1") String page,
-            @RequestParam(required = false, defaultValue = "2") String pageSize,
-            @RequestParam(required = false, defaultValue = "false") String inStockOnly,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "2") Integer pageSize,
+            @RequestParam(required = false, defaultValue = "false") Boolean inStockOnly,
             @RequestParam(required = false, defaultValue = "") String category, HttpServletRequest request) {
         if(!searchRequest.isValidate()) {
             throw new BadRequestException("Invalid Search Request");

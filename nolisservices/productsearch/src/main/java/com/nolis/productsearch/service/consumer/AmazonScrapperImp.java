@@ -42,6 +42,7 @@ public class AmazonScrapperImp implements AmazonScrapper    {
         this.randomUserAgent = randomUserAgent;
     }
 
+    // TODO: 2022-11-28  Add Pagination
     @Override
     public AmazonProductDTO getProductsBySearchQuery(Search search) {
         HttpEntity<Void> request = new HttpEntity<>(getAmazonHeader());
@@ -56,7 +57,8 @@ public class AmazonScrapperImp implements AmazonScrapper    {
         ArrayList<JSONObject> responseJsonArray;
         try {
             responseJsonArray = convertStringResponseToJsonArray(Objects.requireNonNull(productsResponse.getBody()));
-            response = setAmazonProducts(responseJsonArray, setMetaData(responseJsonArray));
+            response = convertJsonToAmazonProductDTO(responseJsonArray, search.getPageSize());
+            setMetaData(responseJsonArray, response);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
@@ -125,21 +127,21 @@ public class AmazonScrapperImp implements AmazonScrapper    {
         ).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private AmazonProductDTO setMetaData(ArrayList<JSONObject> responseJsonArray) throws JSONException {
+    private void setMetaData(ArrayList<JSONObject> responseJsonArray, AmazonProductDTO products) throws JSONException {
         JSONObject metadata = responseJsonArray.get(1).getJSONObject("metadata");
         int totalItems = metadata.getInt("totalResultCount");
-        int pageSize = metadata.getInt("asinOnPageCount");
+        int pageSize = products.getProducts().size();
         int totalPages = (int) Math.ceil((double)totalItems / pageSize);
-        return AmazonProductDTO.builder()
-                .totalItems(totalItems)
-                .totalPages(totalPages)
-                .currentPage(metadata.getInt("page"))
-                .pageSize(pageSize)
-                .build();
+        products.setTotalItems(totalItems);
+        products.setPageSize(pageSize);
+        products.setTotalPages(totalPages);
+        products.setCurrentPage(metadata.getInt("page"));
     }
-    
-    private AmazonProductDTO setAmazonProducts(ArrayList<JSONObject> responseJsonArray, AmazonProductDTO amazonProductDTO) {
-        amazonProductDTO.setProducts(
+
+    private AmazonProductDTO convertJsonToAmazonProductDTO(
+            ArrayList<JSONObject> responseJsonArray, Integer pageSize) {
+        AmazonProductDTO products = new AmazonProductDTO();
+        products.setProducts(
                 getProductFromHtmlString(
                         responseJsonArray.stream()
                                 .filter(
@@ -166,12 +168,9 @@ public class AmazonScrapperImp implements AmazonScrapper    {
                                                 return null;
                                             }
                                         }
-                                ).filter(
-                                        // filter the null products
-                                        Objects::nonNull
-                                ).collect(Collectors.toCollection(ArrayList::new))
+                                ).filter(Objects::nonNull).limit(pageSize).collect(Collectors.toCollection(ArrayList::new))
                 ));
-        return amazonProductDTO;
+        return products;
     }
     private HttpHeaders getAmazonHeader() {
         HttpHeaders headers = new HttpHeaders();
