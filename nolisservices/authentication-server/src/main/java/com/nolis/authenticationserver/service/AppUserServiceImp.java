@@ -57,22 +57,20 @@ public record AppUserServiceImp(
 
     @Override
     public Collection<SimpleGrantedAuthority> addRoleToUserByIdOrEmail(AddRoleRequest request) {
-        try {
-            Role role = roleRepo.findRoleByName(request.roleName())
-                    .orElseThrow(() -> new IllegalStateException("Role not found"));
-            AppUser appUser = appUserRepo.findAppUserByEmailOrId
-                    (request.email(), request.userId()).orElseThrow(
-                    () -> new IllegalStateException("User not found")
-            );
-            log.info("Adding role {} with request user {}",
-                    role, request);
-            return addRoleToUser(appUser, role);
+        Role role = roleRepo.findRoleByName(request.roleName())
+                .orElseThrow(() -> new AppEntityNotFoundException("Role does not exist, " +
+                        "role: " + request.roleName()));
+        AppUser appUser = appUserRepo.findAppUserByEmailOrId
+                (request.email(), request.userId()).orElseThrow(
+                () -> new AppEntityNotFoundException("User does not exist, " +
+                        "userId: " + request.userId() + ", email: " + request.email())
+        );
+        if(appUser.getAuthorities().contains(new SimpleGrantedAuthority(role.getName()))) {
+            throw new AppEntityAlreadyExistException("User already has this role");
         }
-        catch (Exception e) {
-            log.info("User with {} or role {} does not exist"
-                    , request, request.roleName());
-            throw new AppEntityNotFoundException("User or role does not exist, request: " + request);
-        }
+        log.info("Adding role {} with request user {}",
+                role, request);
+        return addRoleToUser(appUser, role);
     }
 
     @Override
