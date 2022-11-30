@@ -13,6 +13,7 @@
     <module>api-gateway</module>
     <module>discovery-server</module>
     <module>authentication-server</module>
+    <module>search-registry</module>
   </modules>
 
   <name>nolisservices</name>
