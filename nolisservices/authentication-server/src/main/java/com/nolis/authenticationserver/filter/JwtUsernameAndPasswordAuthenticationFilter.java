@@ -76,7 +76,7 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
                                               AuthenticationException failed) throws IOException, ServletException {
         response = responseHandler.jsonResponse(
                 CustomHttpResponseDTO.builder()
-                        .data(Map.of("error", "Invalid token"))
+                        .data(Map.of("error", "Invalid Authentication"))
                         .timestamp(System.currentTimeMillis())
                         .status(HttpStatus.UNAUTHORIZED)
                         .success(false)
