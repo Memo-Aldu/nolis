@@ -1,9 +1,7 @@
-package com.nolis.productsearch.model;
+package com.nolis.commondata.model;
 
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.UUID;
 
 @Data
 @Builder
@@ -17,6 +15,4 @@ public class Search {
     private Integer pageSize;
     private Integer page;
     private Boolean inStockOnly;
-
-
 }

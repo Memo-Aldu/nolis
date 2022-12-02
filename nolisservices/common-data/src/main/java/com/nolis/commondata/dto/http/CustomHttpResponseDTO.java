@@ -1,4 +1,4 @@
-package com.apigateway.DTO;
+package com.nolis.commondata.dto.http;
 
 import lombok.*;
 import org.springframework.http.HttpStatus;
@@ -14,4 +14,3 @@ public class CustomHttpResponseDTO {
     private String message;
 
 }
-

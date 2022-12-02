@@ -1,19 +1,21 @@
-package com.nolis.productsearch.DTO.bestbuy;
+package com.nolis.commondata.dto.bestbuy;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.util.ArrayList;
-
-@Getter @ToString
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class BestBuyLocationDTO {
+public class BestBuyStoreLocationDTO {
     @JsonProperty("locations")
     private ArrayList<LocationRoot> location;
 
-    @Getter @Setter @AllArgsConstructor @NoArgsConstructor @ToString
+    @Getter @Setter
+    @AllArgsConstructor @NoArgsConstructor @ToString
     public static class LocationRoot {
         @JsonProperty("loc")
         private LocationInfo location;
@@ -34,5 +36,4 @@ public class BestBuyLocationDTO {
         @JsonProperty("stateName")
         private String state;
     }
-
 }

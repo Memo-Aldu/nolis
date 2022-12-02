@@ -1,4 +1,4 @@
-package com.nolis.productsearch.DTO.amazon;
+package com.nolis.commondata.dto.amazon;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;

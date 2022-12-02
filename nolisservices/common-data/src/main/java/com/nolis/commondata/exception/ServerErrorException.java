@@ -1,4 +1,4 @@
-package com.nolis.productsearch.exception;
+package com.nolis.commondata.exception;
 
 import java.io.Serial;
 

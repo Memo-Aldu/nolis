@@ -1,15 +1,16 @@
-package com.nolis.productsearch.DTO.bestbuy;
+package com.nolis.commondata.dto.bestbuy;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.util.ArrayList;
-
-@Getter @ToString
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class BestBuyAvailabilityDTO {
+public class BestBuyProductAvailabilityDTO {
     @JsonProperty("availabilities")
     private ArrayList<ProductAvailability> productsAvailable;
 
