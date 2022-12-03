@@ -6,8 +6,8 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 
 @EnableEurekaClient
 @SpringBootApplication
-public class ProductRegistryApplication {
+public class SearchRegistryApplication {
     public static void main(String[] args){
-        SpringApplication.run(ProductRegistryApplication.class, args);
+        SpringApplication.run(SearchRegistryApplication.class, args);
     }
 }

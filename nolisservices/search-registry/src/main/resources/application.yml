@@ -12,7 +12,7 @@ eureka:
 
 spring:
   application:
-    name: product-registry-service
+    name: search-registry-service
   cloud:
     loadbalancer:
       ribbon:
