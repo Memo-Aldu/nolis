@@ -1,10 +1,11 @@
 package com.nolis.productsearch.service.consumer;
 
-import com.nolis.productsearch.DTO.amazon.AmazonProductDTO;
-import com.nolis.productsearch.DTO.amazon.AmazonProductResponseDTO;
+import com.nolis.commondata.dto.amazon.AmazonProductDTO;
+import com.nolis.commondata.dto.amazon.AmazonProductResponseDTO;
+import com.nolis.commondata.dto.amazon.AmazonSearchResultsDTO;
+import com.nolis.commondata.model.Search;
 import com.nolis.productsearch.configuration.ExternalApiConfig;
 import com.nolis.productsearch.helper.RandomUserAgent;
-import com.nolis.productsearch.model.Search;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,7 +45,7 @@ public class AmazonScrapperImp implements AmazonScrapper    {
 
     // TODO: 2022-11-28  Add Pagination
     @Override
-    public AmazonProductDTO getProductsBySearchQuery(Search search) {
+    public AmazonSearchResultsDTO getProductsBySearchQuery(Search search) {
         HttpEntity<Void> request = new HttpEntity<>(getAmazonHeader());
         String url = String.format(externalApiConfig.amazonProductUrl(),
                 search.getQuery().replace(" ", "+"),
@@ -53,7 +54,7 @@ public class AmazonScrapperImp implements AmazonScrapper    {
         HttpEntity<String> productsResponse = restTemplate.exchange(
                 url, HttpMethod.POST, request,
                 String.class);
-        AmazonProductDTO response;
+        AmazonSearchResultsDTO response;
         ArrayList<JSONObject> responseJsonArray;
         try {
             responseJsonArray = convertStringResponseToJsonArray(Objects.requireNonNull(productsResponse.getBody()));
@@ -72,11 +73,11 @@ public class AmazonScrapperImp implements AmazonScrapper    {
      */
     @Async
     @Override
-    public CompletableFuture<AmazonProductDTO> getProductsBySearchQueryAsync(Search search) {
+    public CompletableFuture<AmazonSearchResultsDTO> getProductsBySearchQueryAsync(Search search) {
         return CompletableFuture.completedFuture(getProductsBySearchQuery(search));
     }
 
-    private ArrayList<AmazonProductDTO.Product> getProductFromHtmlString(ArrayList<AmazonProductResponseDTO> productsResponse) {
+    private ArrayList<AmazonProductDTO> getProductFromHtmlString(ArrayList<AmazonProductResponseDTO> productsResponse) {
         return productsResponse.stream()
                 .map(
                         productResponse -> {
@@ -91,7 +92,7 @@ public class AmazonScrapperImp implements AmazonScrapper    {
                             Element priceEle = doc.select("span.a-offscreen").first();
                             String price = priceEle != null ? priceEle.text() : "";
 
-                            return AmazonProductDTO.Product.builder()
+                            return AmazonProductDTO.builder()
                                     .isPrime(isPrime)
                                     .name(doc.select("h2").text())
                                     .price(price)
@@ -127,21 +128,21 @@ public class AmazonScrapperImp implements AmazonScrapper    {
         ).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private void setMetaData(ArrayList<JSONObject> responseJsonArray, AmazonProductDTO products) throws JSONException {
+    private void setMetaData(ArrayList<JSONObject> responseJsonArray, AmazonSearchResultsDTO results) throws JSONException {
         JSONObject metadata = responseJsonArray.get(1).getJSONObject("metadata");
         int totalItems = metadata.getInt("totalResultCount");
-        int pageSize = products.getProducts().size();
+        int pageSize = results.getProducts().size();
         int totalPages = (int) Math.ceil((double)totalItems / pageSize);
-        products.setTotalItems(totalItems);
-        products.setPageSize(pageSize);
-        products.setTotalPages(totalPages);
-        products.setCurrentPage(metadata.getInt("page"));
+        results.setTotalItems(totalItems);
+        results.setPageSize(pageSize);
+        results.setTotalPages(totalPages);
+        results.setCurrentPage(metadata.getInt("page"));
     }
 
-    private AmazonProductDTO convertJsonToAmazonProductDTO(
+    private AmazonSearchResultsDTO convertJsonToAmazonProductDTO(
             ArrayList<JSONObject> responseJsonArray, Integer pageSize) {
-        AmazonProductDTO products = new AmazonProductDTO();
-        products.setProducts(
+        AmazonSearchResultsDTO results = new AmazonSearchResultsDTO();
+        results.setProducts(
                 getProductFromHtmlString(
                         responseJsonArray.stream()
                                 .filter(
@@ -170,7 +171,7 @@ public class AmazonScrapperImp implements AmazonScrapper    {
                                         }
                                 ).filter(Objects::nonNull).limit(pageSize).collect(Collectors.toCollection(ArrayList::new))
                 ));
-        return products;
+        return results;
     }
     private HttpHeaders getAmazonHeader() {
         HttpHeaders headers = new HttpHeaders();

@@ -1,12 +1,12 @@
 package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.DTO.amazon.AmazonProductDTO;
-import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
-import com.nolis.productsearch.exception.BadRequestException;
+import com.nolis.commondata.dto.amazon.AmazonSearchResultsDTO;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.exception.BadRequestException;
+import com.nolis.commondata.model.Search;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import com.nolis.productsearch.helper.ControllerHelper;
 import com.nolis.productsearch.helper.ResponseHandler;
-import com.nolis.productsearch.model.Search;
 import com.nolis.productsearch.request.SearchRequest;
 import com.nolis.productsearch.service.consumer.AmazonScrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ public record AmazonController(
 
         if(controllerHelper.hasAuthority(request, "ROLE_AMAZON_USER")) {
             log.info("Best Buy Search Request {}", search);
-            AmazonProductDTO products = amazonScrapper
+            AmazonSearchResultsDTO products = amazonScrapper
                     .getProductsBySearchQuery(search);
             Map<String, Object> data = Map.of(
                     "amazon", products);

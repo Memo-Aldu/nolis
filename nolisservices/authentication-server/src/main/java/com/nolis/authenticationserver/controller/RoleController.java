@@ -1,11 +1,11 @@
 package com.nolis.authenticationserver.controller;
 
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.DTO.RoleRequest;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
-import com.nolis.authenticationserver.exception.BadRequestException;
 import com.nolis.authenticationserver.model.Role;
 import com.nolis.authenticationserver.service.RoleService;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.exception.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

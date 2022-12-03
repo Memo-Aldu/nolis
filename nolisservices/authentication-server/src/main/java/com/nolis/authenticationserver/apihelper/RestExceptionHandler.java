@@ -1,7 +1,10 @@
 package com.nolis.authenticationserver.apihelper;
 
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.exception.*;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.exception.AppEntityAlreadyExistException;
+import com.nolis.commondata.exception.AppEntityNotFoundException;
+import com.nolis.commondata.exception.BadRequestException;
 import lombok.AllArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

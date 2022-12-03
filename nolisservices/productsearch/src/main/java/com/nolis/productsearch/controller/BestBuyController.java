@@ -1,15 +1,15 @@
 package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
-import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
-import com.nolis.productsearch.exception.BadRequestException;
+import com.nolis.commondata.dto.bestbuy.BestBuySearchResultsDTO;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.exception.BadRequestException;
+import com.nolis.commondata.model.Search;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import com.nolis.productsearch.helper.ControllerHelper;
 import com.nolis.productsearch.helper.ResponseHandler;
 import com.nolis.productsearch.request.SearchRequest;
 import com.nolis.productsearch.service.consumer.BestBuyScrapper;
 import com.nolis.productsearch.service.producer.SearchService;
-import com.nolis.productsearch.model.Search;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +52,7 @@ public record BestBuyController(
 
         if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
-            BestBuyProductsDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
+            BestBuySearchResultsDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
             return getCustomHttpResponseDTOResponseEntity(request, search, products);
         } else {
             log.error("User is not authorized to access this resource");
@@ -84,7 +84,7 @@ public record BestBuyController(
         // TODO: add a role for inStockOnly
         if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
-            BestBuyProductsDTO products = bestBuyScrapper.getProductsBySearchQuery(search);
+            BestBuySearchResultsDTO products = bestBuyScrapper.getProductsBySearchQuery(search);
             return getCustomHttpResponseDTOResponseEntity(request, search, products);
         } else {
             log.error("User is not authorized to access this resource");
@@ -100,7 +100,7 @@ public record BestBuyController(
      * @return ResponseEntity<CustomHttpResponseDTO>
      */
     private ResponseEntity<CustomHttpResponseDTO> getCustomHttpResponseDTOResponseEntity(
-            HttpServletRequest request, Search search, BestBuyProductsDTO products) {
+            HttpServletRequest request, Search search, BestBuySearchResultsDTO products) {
         Map<String, Object> data = Map.of(
                 "best-buy", products);
         return products.getProducts() != null && products.getProducts().size() > 0 ?

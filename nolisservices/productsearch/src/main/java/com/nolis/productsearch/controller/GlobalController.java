@@ -1,13 +1,13 @@
 package com.nolis.productsearch.controller;
 
-import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
-import com.nolis.productsearch.DTO.amazon.AmazonProductDTO;
-import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
-import com.nolis.productsearch.exception.BadRequestException;
+import com.nolis.commondata.dto.amazon.AmazonSearchResultsDTO;
+import com.nolis.commondata.dto.bestbuy.BestBuySearchResultsDTO;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.exception.BadRequestException;
+import com.nolis.commondata.model.Search;
 import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import com.nolis.productsearch.helper.ControllerHelper;
 import com.nolis.productsearch.helper.ResponseHandler;
-import com.nolis.productsearch.model.Search;
 import com.nolis.productsearch.request.SearchRequest;
 import com.nolis.productsearch.service.consumer.AmazonScrapper;
 import com.nolis.productsearch.service.consumer.BestBuyScrapper;
@@ -53,12 +53,14 @@ public record GlobalController(
                 .build();
         if(controllerHelper.hasAuthority(request, "ROLE_SEARCH_ALL")) {
             log.info("Best Buy Search Request {}", search);
-            CompletableFuture<BestBuyProductsDTO> bestBuyProductsFuture = bestBuyScrapper.getProductsBySearchQueryAsync(search);
-            CompletableFuture<AmazonProductDTO> amazonProductsFuture = amazonScrapper.getProductsBySearchQueryAsync(search);
+            CompletableFuture<BestBuySearchResultsDTO> bestBuyProductsFuture = bestBuyScrapper
+                    .getProductsBySearchQueryAsync(search);
+            CompletableFuture<AmazonSearchResultsDTO> amazonProductsFuture = amazonScrapper
+                    .getProductsBySearchQueryAsync(search);
             CompletableFuture.allOf(bestBuyProductsFuture, amazonProductsFuture).join();
             try {
-                BestBuyProductsDTO bestBuyProducts = bestBuyProductsFuture.get();
-                AmazonProductDTO amazonProducts = amazonProductsFuture.get();
+                BestBuySearchResultsDTO bestBuyProducts = bestBuyProductsFuture.get();
+                AmazonSearchResultsDTO amazonProducts = amazonProductsFuture.get();
                 Map<String, Object> data = Map.of(
                         "bestBuyProducts", bestBuyProducts,
                         "amazonProducts", amazonProducts

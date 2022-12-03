@@ -1,12 +1,12 @@
 package com.nolis.authenticationserver.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.DTO.EmailPasswordAuthenticationRequest;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.model.AppUser;
 import com.nolis.authenticationserver.security.JwtConfig;
 import com.nolis.authenticationserver.security.JwtUtils;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

@@ -1,22 +1,21 @@
 package com.nolis.productsearch.service.consumer;
 
-import com.nolis.productsearch.DTO.bestbuy.BestBuyAvailabilityDTO;
-import com.nolis.productsearch.DTO.bestbuy.BestBuyLocationDTO;
-import com.nolis.productsearch.DTO.bestbuy.BestBuyProductResponseDTO;
-import com.nolis.productsearch.DTO.bestbuy.BestBuyProductsDTO;
-import com.nolis.productsearch.model.Search;
+import com.nolis.commondata.dto.bestbuy.BestBuyProductAvailabilityDTO;
+import com.nolis.commondata.dto.bestbuy.BestBuySearchResultsDTO;
+import com.nolis.commondata.dto.bestbuy.BestBuyStoreLocationDTO;
+import com.nolis.commondata.model.Search;
 import org.springframework.scheduling.annotation.Async;
 
 import java.util.concurrent.CompletableFuture;
 
 public interface BestBuyScrapper {
-    BestBuyProductsDTO getProductsBySearchQuery(Search search);
+    BestBuySearchResultsDTO getProductsBySearchQuery(Search search);
     @Async
-    CompletableFuture<BestBuyProductsDTO> getProductsBySearchQueryAsync(Search search);
+    CompletableFuture<BestBuySearchResultsDTO> getProductsBySearchQueryAsync(Search search);
 
-    BestBuyProductsDTO getProductsDetailsWithQuery(Search search);
+    BestBuySearchResultsDTO getProductsDetailsWithQuery(Search search);
 
-    BestBuyLocationDTO getLocation(String location);
-    BestBuyAvailabilityDTO getAvailability(String sku, String locationCode);
+    BestBuyStoreLocationDTO getLocation(String location);
+    BestBuyProductAvailabilityDTO getAvailability(String sku, String locationCode);
 
 }

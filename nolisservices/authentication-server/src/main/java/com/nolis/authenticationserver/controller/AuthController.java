@@ -1,7 +1,6 @@
 package com.nolis.authenticationserver.controller;
 
 import com.mongodb.lang.NonNull;
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.exception.InvalidTokenException;
 import com.nolis.authenticationserver.exception.MissingAuthenticationException;
@@ -9,6 +8,7 @@ import com.nolis.authenticationserver.exception.TokenAuthenticationException;
 import com.nolis.authenticationserver.exception.UnauthorizedTokenException;
 import com.nolis.authenticationserver.security.JwtUtils;
 import com.nolis.authenticationserver.service.JwtAuthenticationService;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

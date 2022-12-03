@@ -1,6 +1,8 @@
 package com.nolis.productsearch.helper;
 
-import com.nolis.productsearch.DTO.CustomHttpResponseDTO;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.exception.BadRequestException;
+import com.nolis.commondata.exception.ServerErrorException;
 import com.nolis.productsearch.exception.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

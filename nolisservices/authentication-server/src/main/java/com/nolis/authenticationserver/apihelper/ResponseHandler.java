@@ -1,7 +1,7 @@
 package com.nolis.authenticationserver.apihelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
+import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
