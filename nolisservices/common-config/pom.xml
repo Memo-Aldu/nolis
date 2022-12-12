@@ -11,6 +11,13 @@
 
     <groupId>com.nolis.commonconfig</groupId>
     <artifactId>common-config</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>com.nolis.commondata</groupId>
+            <artifactId>common-data</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
