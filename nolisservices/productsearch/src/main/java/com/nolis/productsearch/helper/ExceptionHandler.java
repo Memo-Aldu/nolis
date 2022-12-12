@@ -1,9 +1,7 @@
 package com.nolis.productsearch.helper;
 
 import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
-import com.nolis.commondata.exception.BadRequestException;
-import com.nolis.commondata.exception.ServerErrorException;
-import com.nolis.productsearch.exception.*;
+import com.nolis.commondata.exception.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -11,7 +9,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.io.IOException;
@@ -21,11 +18,10 @@ import static org.springframework.http.HttpStatus.*;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice @AllArgsConstructor @Slf4j
-public class RestExceptionHandler extends ResponseEntityExceptionHandler {
-
+public class ExceptionHandler extends ResponseEntityExceptionHandler {
     private final ResponseHandler responseHandler;
 
-    @ExceptionHandler(HttpClientErrorException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(HttpClientErrorException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleHttpClientError(
             HttpClientErrorException ex) throws IOException {
         return responseHandler.httpResponse(
@@ -39,7 +35,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 headers(ex.getMessage()));
     }
 
-    @ExceptionHandler(HttpExternalServerErrorException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(HttpExternalServerErrorException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleHttpServerError(
             HttpExternalServerErrorException ex) throws IOException {
         return responseHandler.httpResponse(
@@ -53,7 +49,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 headers(ex.getMessage()));
     }
 
-    @ExceptionHandler(TokenUnauthorizedToScopeException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(TokenUnauthorizedToScopeException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleUnauthorizedExceptions(
             TokenUnauthorizedToScopeException ex) {
         log.warn("Sending an unauthorized response: {}", ex.getMessage());
@@ -68,7 +64,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 headers(ex.getMessage()));
     }
 
-    @ExceptionHandler(BadRequestException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(BadRequestException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleBadRequest(
             BadRequestException ex) {
         log.warn("Sending a bad request response: {}", ex.getMessage());
@@ -83,7 +79,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 headers(ex.getMessage()));
     }
 
-    @ExceptionHandler(ServerErrorException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler(ServerErrorException.class)
     protected ResponseEntity<CustomHttpResponseDTO> handleServerError(ServerErrorException ex) {
         log.warn("Sending a server error response: {}", ex.getMessage());
         return responseHandler.httpResponse(

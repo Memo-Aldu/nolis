@@ -9,13 +9,17 @@ import org.springframework.scheduling.annotation.Async;
 import java.util.concurrent.CompletableFuture;
 
 public interface BestBuyScrapper {
-    BestBuySearchResultsDTO getProductsBySearchQuery(Search search);
+    BestBuySearchResultsDTO searchBestBuyWithStock(Search search);
     @Async
-    CompletableFuture<BestBuySearchResultsDTO> getProductsBySearchQueryAsync(Search search);
+    CompletableFuture<BestBuySearchResultsDTO> searchBestBuyWithStockAsync(Search search);
 
-    BestBuySearchResultsDTO getProductsDetailsWithQuery(Search search);
+    BestBuySearchResultsDTO searchBestBuy(Search search);
+    @Async
+    CompletableFuture<BestBuySearchResultsDTO> searchBestBuyAsync(Search search);
 
     BestBuyStoreLocationDTO getLocation(String location);
+    @Async
+    CompletableFuture<BestBuyStoreLocationDTO> getLocationAsync(String location);
     BestBuyProductAvailabilityDTO getAvailability(String sku, String locationCode);
 
 }

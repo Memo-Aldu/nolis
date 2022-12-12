@@ -17,6 +17,15 @@ spring:
     loadbalancer:
       ribbon:
         enabled: false
+  redis:
+    host: localhost
+    port: 6379
+  cache:
+    redis:
+      time-to-live: 20S
+      cache-null-values: false
+      use-key-prefix: false
+
 
 application:
   external:
@@ -25,3 +34,18 @@ application:
       bestBuyLocationUrl: "https://stores.bestbuy.ca/en-ca/search?q=%s"
       bestBuyInventoryUrl: "https://www.bestbuy.ca/ecomm-api/availability/products?accept=application%2Fvnd.bestbuy.standardproduct.v1%2Bjson&accept-language=en-CA&locations={0}&skus={1}"
       amazonProductUrl: "https://www.amazon.ca/s/query?k=%s&page=%s"
+  service:
+    redis:
+      cache:
+
+        - name: "search"
+          ttl: 20
+          unit: SECONDS
+
+        - name: "bb-location"
+          ttl: 5
+          unit: MINUTES
+
+
+
+

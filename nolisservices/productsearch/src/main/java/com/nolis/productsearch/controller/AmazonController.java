@@ -2,9 +2,10 @@ package com.nolis.productsearch.controller;
 
 import com.nolis.commondata.dto.amazon.AmazonSearchResultsDTO;
 import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.enums.ProductType;
 import com.nolis.commondata.exception.BadRequestException;
+import com.nolis.commondata.exception.TokenUnauthorizedToScopeException;
 import com.nolis.commondata.model.Search;
-import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import com.nolis.productsearch.helper.ControllerHelper;
 import com.nolis.productsearch.helper.ResponseHandler;
 import com.nolis.productsearch.request.SearchRequest;
@@ -38,6 +39,7 @@ public record AmazonController(
                 .pageSize(pageSize)
                 .page(page)
                 .userId(searchRequest.userId())
+                .productType(ProductType.Amazon)
                 .build();
 
         if(controllerHelper.hasAuthority(request, "ROLE_AMAZON_USER")) {

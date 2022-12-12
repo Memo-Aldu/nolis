@@ -2,9 +2,10 @@ package com.nolis.productsearch.controller;
 
 import com.nolis.commondata.dto.bestbuy.BestBuySearchResultsDTO;
 import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.enums.ProductType;
 import com.nolis.commondata.exception.BadRequestException;
+import com.nolis.commondata.exception.TokenUnauthorizedToScopeException;
 import com.nolis.commondata.model.Search;
-import com.nolis.productsearch.exception.TokenUnauthorizedToScopeException;
 import com.nolis.productsearch.helper.ControllerHelper;
 import com.nolis.productsearch.helper.ResponseHandler;
 import com.nolis.productsearch.request.SearchRequest;
@@ -47,12 +48,13 @@ public record BestBuyController(
                 .category(category)
                 .pageSize(pageSize)
                 .page(page)
-                .userId(searchRequest.userId())
+                .userId(searchRequest.userId()) // not required id or email
+                .productType(ProductType.BestBuy)
                 .build();
 
         if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
-            BestBuySearchResultsDTO products = bestBuyScrapper.getProductsDetailsWithQuery(search);
+            BestBuySearchResultsDTO products = bestBuyScrapper.searchBestBuy(search);
             return getCustomHttpResponseDTOResponseEntity(request, search, products);
         } else {
             log.error("User is not authorized to access this resource");
@@ -78,13 +80,14 @@ public record BestBuyController(
                 .category(category)
                 .pageSize(pageSize)
                 .page(page)
+                .productType(ProductType.BestBuy)
                 .userId(searchRequest.userId())
                 .build();
         // TODO: Add search to database
         // TODO: add a role for inStockOnly
         if(controllerHelper.hasAuthority(request, "ROLE_BESTBUY_USER")) {
             log.info("Best Buy Search Request {}", search);
-            BestBuySearchResultsDTO products = bestBuyScrapper.getProductsBySearchQuery(search);
+            BestBuySearchResultsDTO products = bestBuyScrapper.searchBestBuyWithStock(search);
             return getCustomHttpResponseDTOResponseEntity(request, search, products);
         } else {
             log.error("User is not authorized to access this resource");

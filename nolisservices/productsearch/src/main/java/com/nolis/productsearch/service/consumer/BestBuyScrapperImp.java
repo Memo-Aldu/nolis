@@ -8,10 +8,13 @@ import com.nolis.commondata.exception.BadRequestException;
 import com.nolis.commondata.exception.ServerErrorException;
 import com.nolis.commondata.model.Search;
 import com.nolis.productsearch.configuration.ExternalApiConfig;
-import com.nolis.productsearch.exception.HttpClientErrorException;
+import com.nolis.commondata.exception.HttpClientErrorException;
 import com.nolis.productsearch.helper.RandomUserAgent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,22 +30,28 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 
+import static com.nolis.commondata.constants.Caches.*;
+import static com.nolis.commondata.constants.Servers.BESTBUY_HOST_NAME;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.http.client.params.ClientPNames.COOKIE_POLICY;
 import static org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 @Service @Slf4j
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class BestBuyScrapperImp implements BestBuyScrapper {
-    @Qualifier("withoutEureka")
+    @Qualifier("withoutLoadBalanced")
     private final RestTemplate restTemplate;
+    // instance of this, wrapper in stub proxy for redis
+    private final BestBuyScrapperImp _bestBuyScrapperImp;
     private final ExternalApiConfig externalApiConfig;
     private final RandomUserAgent randomUserAgent;
-    private final String HOST_NAME = "www.bestbuy.ca";
 
-    public BestBuyScrapperImp(@Qualifier("withoutEureka") RestTemplate restTemplate,
-                              ExternalApiConfig externalApiConfig, RandomUserAgent randomUserAgent) {
+    public BestBuyScrapperImp(@Qualifier("withoutLoadBalanced") RestTemplate restTemplate,
+                              BestBuyScrapperImp bestBuyScrapperImp, ExternalApiConfig externalApiConfig,
+                              RandomUserAgent randomUserAgent) {
         this.restTemplate = restTemplate;
+        this._bestBuyScrapperImp = bestBuyScrapperImp;
         this.externalApiConfig = externalApiConfig;
         this.randomUserAgent = randomUserAgent;
     }
@@ -54,23 +63,30 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return BestBuyProductsDTO
      */
     @Override
-    public BestBuySearchResultsDTO getProductsBySearchQuery(Search search) {
+    @Cacheable(value = SEARCH, key = "'best-buy_'.concat(#search.toString())")
+    public BestBuySearchResultsDTO searchBestBuyWithStock(Search search) {
         try {
+            log.info("Getting products from BestBuy for search: {}", search);
             // time before request
             long startTime = System.currentTimeMillis();
-            CompletableFuture<BestBuyProductResponseDTO> products = getProductsDetailsWithQueryAsync(search);
+            CompletableFuture<BestBuySearchResultsDTO> searchResultsFuture = _bestBuyScrapperImp
+                    .searchBestBuyAsync(search);
             String locationCodes = "";
 
-            if(!search.getSearchLocation().isEmpty()) {
+            if(search.getSearchLocation() == null || !search.getSearchLocation().isEmpty()) {
                 log.info("Location is not empty, calling external api to get location codes");
-                CompletableFuture<BestBuyStoreLocationDTO> location = getLocationAsync(search.getSearchLocation());
-                CompletableFuture.allOf(location, products).join(); // wait for all to complete
+                CompletableFuture<BestBuyStoreLocationDTO> location = _bestBuyScrapperImp
+                        .getLocationAsync(search.getSearchLocation());
+                CompletableFuture.allOf(location, searchResultsFuture).join(); // wait for all to complete
                 locationCodes = getLocationCodeFromLocation(location.get().getLocation());
             }
             // time after request
             long endTime = System.currentTimeMillis();
             log.info("Async calls took: {} ms", endTime - startTime);
-            String skus = getSkusFromProductsDetails(products.get().getProductDetails());
+            BestBuySearchResultsDTO searchResults = searchResultsFuture.get();
+            String skus = getSkusFromProductsDetails(
+                    searchResults.getProducts()
+            );
             if(skus.isEmpty()) {
                 return  BestBuySearchResultsDTO.builder()
                         .totalItems(0)
@@ -81,11 +97,12 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
                         .totalItems(0)
                         .build();
             }
-            BestBuyProductAvailabilityDTO availability = getAvailability(skus, locationCodes);
+            BestBuyProductAvailabilityDTO availability = _bestBuyScrapperImp
+                    .getAvailability(skus, locationCodes);
 
             return search.getInStockOnly() ?
-                    getProducts(getInventoryWithStock(availability), products.get())
-                    : getProducts(availability.getProductsAvailable(), products.get());
+                    getInStockProducts(getInventoryWithStock(availability), searchResults)
+                    : getInStockProducts(availability.getProductsAvailable(), searchResults);
 
         }catch (HttpClientErrorException e ) {
             log.error("Error while fetching products from BestBuy {}", e.getMessage());
@@ -103,8 +120,10 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      */
     @Async
     @Override
-    public CompletableFuture<BestBuySearchResultsDTO> getProductsBySearchQueryAsync(Search search) {
-        return CompletableFuture.completedFuture(getProductsBySearchQuery(search));
+    public CompletableFuture<BestBuySearchResultsDTO> searchBestBuyWithStockAsync(Search search) {
+        log.info("Async -Getting products from BestBuy for search: {}", search);
+        return CompletableFuture.completedFuture(
+                _bestBuyScrapperImp.searchBestBuyWithStock(search));
     }
 
     /**
@@ -113,8 +132,11 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return BestBuyProductDetailDTO
      */
     @Override
-    public BestBuySearchResultsDTO getProductsDetailsWithQuery(Search search) {
+    @Cacheable(value = SEARCH, key = "'best-buy_'.concat(#search.toString())")
+    public BestBuySearchResultsDTO searchBestBuy(Search search) {
+        log.info("Calling BestBuy products API");
         // Todo: custom headers for each request
+        log.info("Getting products from BestBuy for search: {}", search);
         HttpEntity<Void> request = new HttpEntity<>(getBestBuyHeaders());
         String url = String.format(externalApiConfig.bestBuyProductUrl(), search.getCategory(),
                 search.getPage(), search.getPageSize(), search.getQuery());
@@ -122,17 +144,31 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         HttpEntity<BestBuyProductResponseDTO> productsResponse = restTemplate.exchange(
                 url, HttpMethod.GET, request,
                 BestBuyProductResponseDTO.class);
-        BestBuyProductResponseDTO body = productsResponse.getBody();
-        if(Objects.isNull(body)) {
+        if(!productsResponse.hasBody()) {
             return new BestBuySearchResultsDTO();
         }
+        BestBuyProductResponseDTO body = productsResponse.getBody();
         return BestBuySearchResultsDTO.builder()
                 .totalItems(body.getTotalItems())
                 .currentPage(body.getCurrentPage())
                 .pageSize(body.getPageSize())
                 .totalPages(body.getTotalPages())
-                .products(body.getProductDetails())
+                .products(enrichProducts(body.getProductDetails()))
                 .build();
+    }
+
+    /**
+     * Async call to the product details api
+     * @param search Search
+     * @return CompletableFuture<BestBuyProductDetailDTO>
+     */
+    @Async
+    @Override
+    public CompletableFuture<BestBuySearchResultsDTO> searchBestBuyAsync(Search search) {
+        // Todo: custom headers for each request
+        log.info("Async -Calling BestBuy products API");
+        return CompletableFuture.completedFuture(
+                _bestBuyScrapperImp.searchBestBuy(search));
     }
 
     /**
@@ -141,8 +177,10 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return BestBuyLocationDTO
      */
     @Override
+    @Cacheable(value = BEST_BUY_LOCATIONS, key = "#location")
     public BestBuyStoreLocationDTO getLocation(String location) {
         // Todo: custom headers for each request
+        log.info("Calling BestBuy Location API");
         HttpEntity<Void> request = new HttpEntity<>(getBestBuyHeaders());
         String url = String.format(externalApiConfig.bestBuyLocationUrl(), location);
         log.info("Location url: {}", url);
@@ -153,6 +191,20 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
     }
 
     /**
+     * Async call to get the location codes from a location name ex: "Mississauga, ON"
+     * @param location string
+     * @return CompletableFuture<BestBuyLocationDTO>
+     */
+    @Async
+    @Override
+    public CompletableFuture<BestBuyStoreLocationDTO> getLocationAsync(String location) {
+        // Todo: custom headers for each request
+        log.info("Async -Calling BestBuy Location API");
+        return CompletableFuture.completedFuture(
+                _bestBuyScrapperImp.getLocation(location));
+    }
+
+    /**
      * Get availabilities(stock info) of a string of skus
      * @param skus string
      * @param locationCodes string
@@ -160,6 +212,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      */
     @Override
     public BestBuyProductAvailabilityDTO getAvailability(String skus, String locationCodes) {
+        log.info("Calling BestBuy Availability API");
         HttpEntity<Object> request = new HttpEntity<>(getInventoryHeaders());
         String url = MessageFormat.format(externalApiConfig.bestBuyInventoryUrl(), locationCodes, skus);
         try {
@@ -176,40 +229,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         }
     }
 
-    /**
-     * Async call to get the location codes from a location name ex: "Mississauga, ON"
-     * @param location string
-     * @return CompletableFuture<BestBuyLocationDTO>
-     */
-    @Async
-    protected CompletableFuture<BestBuyStoreLocationDTO> getLocationAsync(String location) {
-        // Todo: custom headers for each request
-        HttpEntity<Void> request = new HttpEntity<>(getBestBuyHeaders());
-        String url = String.format(externalApiConfig.bestBuyLocationUrl(), location);
-        log.info("Async location url: {}", url);
-        HttpEntity<BestBuyStoreLocationDTO> locationResponse = restTemplate.exchange(
-                url, HttpMethod.GET, request,
-                BestBuyStoreLocationDTO.class);
-        return CompletableFuture.completedFuture(locationResponse.getBody());
-    }
-
-    /**
-     * Async call to the product details api
-     * @param search Search
-     * @return CompletableFuture<BestBuyProductDetailDTO>
-     */
-    @Async
-    protected CompletableFuture<BestBuyProductResponseDTO> getProductsDetailsWithQueryAsync(Search search) {
-        // Todo: custom headers for each request
-        HttpEntity<Void> request = new HttpEntity<>(getBestBuyHeaders());
-        String url = String.format(externalApiConfig.bestBuyProductUrl(), search.getCategory(),
-                search.getPage(), search.getPageSize(), search.getQuery());
-        log.info("Async product details url: {}", url);
-        HttpEntity<BestBuyProductResponseDTO> productsResponse = restTemplate.exchange(
-                url, HttpMethod.GET, request,
-                BestBuyProductResponseDTO.class);
-        return CompletableFuture.completedFuture(productsResponse.getBody());
-    }
+    /**----------------------------------------private methods-----------------------------------------**/
 
     private String getSkusFromProductsDetails(ArrayList<BestBuyProductResponseDTO.BestBuyProduct> products) {
         return products.stream()
@@ -226,31 +246,39 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
                 .orElse("");
     }
 
-    private BestBuySearchResultsDTO getProducts(ArrayList<BestBuyProductAvailabilityDTO.ProductAvailability> availability,
-                                           BestBuyProductResponseDTO productDetails) {
-        ArrayList<BestBuyProductResponseDTO.BestBuyProduct> products  = productDetails.getProductDetails().stream()
-                .peek(product -> {
-                    BestBuyProductAvailabilityDTO.ProductAvailability availabilityItem = availability
-                            .stream()
-                            .filter(x -> x.getSku().equals(product.getSku()))
-                            .findFirst()
-                            .orElse(null);
-                    product.setAvailability(availabilityItem);
-                })
-                // remove if no availability
-                .filter(x -> x.getAvailability() != null)
-                // add the host name to the product url
-                .peek(product -> product
-                        .setProductUrl("https://" + HOST_NAME + product.getProductUrl()))
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    private BestBuySearchResultsDTO getInStockProducts(ArrayList<BestBuyProductAvailabilityDTO.ProductAvailability> availability,
+                                                BestBuySearchResultsDTO searchResults) {
+        // check if this works
+        searchResults.setProducts(
+                searchResults.getProducts().stream()
+                    .peek(product -> {
+                        BestBuyProductAvailabilityDTO.ProductAvailability availabilityItem = availability
+                                .stream()
+                                .filter(x -> x.getSku().equals(product.getSku()))
+                                .findFirst()
+                                .orElse(null);
+                        product.setAvailability(availabilityItem);
+                    })
+                    // remove if no availability
+                    .filter(x -> x.getAvailability() != null)
+                    // add the host name to the product url
+                    .peek(product -> {
+                            if(!product.getProductUrl().contains("https://")) {
+                                product.setProductUrl("https://" + BESTBUY_HOST_NAME + product.getProductUrl());
+                            }
+                    })
+                    .collect(ArrayList::new, ArrayList::add, ArrayList::addAll));
+        return searchResults;
+    }
 
-        return BestBuySearchResultsDTO.builder()
-                .currentPage(productDetails.getCurrentPage())
-                .pageSize(products.size())
-                .totalPages(productDetails.getTotalPages())
-                .totalItems(productDetails.getTotalItems())
-                .products(products)
-                .build();
+    private ArrayList<BestBuyProductResponseDTO.BestBuyProduct> enrichProducts(
+            ArrayList<BestBuyProductResponseDTO.BestBuyProduct> products) {
+        return products.stream()
+                .peek(product -> {
+                    if(!product.getProductUrl().contains("https://")) {
+                        product.setProductUrl("https://" + BESTBUY_HOST_NAME + product.getProductUrl());
+                    }
+                }).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
     }
 
     private ArrayList<BestBuyProductAvailabilityDTO.ProductAvailability> getInventoryWithStock(

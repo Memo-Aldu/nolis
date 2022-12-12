@@ -13,6 +13,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -26,38 +29,47 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static com.nolis.commondata.constants.Caches.SEARCH;
+import static com.nolis.commondata.constants.Servers.AMAZON_HOST_NAME;
+
 
 @Service @Slf4j
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class AmazonScrapperImp implements AmazonScrapper    {
 
-    @Qualifier("withoutEureka")
+    @Qualifier("withoutLoadBalanced")
     private final RestTemplate restTemplate;
+    private final AmazonScrapperImp _amazonScrapperImp;
     private final ExternalApiConfig externalApiConfig;
-    private final String HOST_NAME = "www.amazon.ca";
     private final RandomUserAgent randomUserAgent;
 
-    public AmazonScrapperImp(@Qualifier("withoutEureka") RestTemplate restTemplate,
-                             ExternalApiConfig externalApiConfig, RandomUserAgent randomUserAgent) {
+    public AmazonScrapperImp(@Qualifier("withoutLoadBalanced") RestTemplate restTemplate,
+                             AmazonScrapperImp amazonScrapperImp, ExternalApiConfig externalApiConfig,
+                             RandomUserAgent randomUserAgent) {
         this.restTemplate = restTemplate;
+        this._amazonScrapperImp = amazonScrapperImp;
         this.externalApiConfig = externalApiConfig;
         this.randomUserAgent = randomUserAgent;
     }
 
     // TODO: 2022-11-28  Add Pagination
     @Override
+    @Cacheable(value = SEARCH, key = "'amazon_'.concat(#search.toString())")
     public AmazonSearchResultsDTO getProductsBySearchQuery(Search search) {
-        HttpEntity<Void> request = new HttpEntity<>(getAmazonHeader());
-        String url = String.format(externalApiConfig.amazonProductUrl(),
-                search.getQuery().replace(" ", "+"),
-                search.getPage());
-        log.info("Product details url: {}", url);
-        HttpEntity<String> productsResponse = restTemplate.exchange(
-                url, HttpMethod.POST, request,
-                String.class);
+        String productResponse = makeCallToAmazonAPI(search);
+        if (productResponse == null) {
+            return AmazonSearchResultsDTO.builder()
+                    .currentPage(search.getPage())
+                    .pageSize(0)
+                    .totalItems(0)
+                    .totalPages(0)
+                    .products(new ArrayList<>())
+                    .build();
+        }
         AmazonSearchResultsDTO response;
         ArrayList<JSONObject> responseJsonArray;
         try {
-            responseJsonArray = convertStringResponseToJsonArray(Objects.requireNonNull(productsResponse.getBody()));
+            responseJsonArray = convertStringResponseToJsonArray(productResponse);
             response = convertJsonToAmazonProductDTO(responseJsonArray, search.getPageSize());
             setMetaData(responseJsonArray, response);
         } catch (JSONException e) {
@@ -74,14 +86,29 @@ public class AmazonScrapperImp implements AmazonScrapper    {
     @Async
     @Override
     public CompletableFuture<AmazonSearchResultsDTO> getProductsBySearchQueryAsync(Search search) {
-        return CompletableFuture.completedFuture(getProductsBySearchQuery(search));
+        return CompletableFuture.completedFuture(
+                _amazonScrapperImp.getProductsBySearchQuery(search));
+    }
+
+    private String makeCallToAmazonAPI(Search search) {
+        HttpEntity<Void> request = new HttpEntity<>(getAmazonHeader());
+        String url = String.format(externalApiConfig.amazonProductUrl(),
+                search.getQuery().replace(" ", "+"),
+                search.getPage());
+        log.info("Product details url: {}", url);
+        HttpEntity<String> productsResponse = restTemplate.exchange(
+                url, HttpMethod.POST, request,
+                String.class);
+        if(!productsResponse.hasBody()) {
+            return null;
+        }
+        return productsResponse.getBody();
     }
 
     private ArrayList<AmazonProductDTO> getProductFromHtmlString(ArrayList<AmazonProductResponseDTO> productsResponse) {
         return productsResponse.stream()
                 .map(
                         productResponse -> {
-                            log.info("Product html: {}", productResponse.getHtml());
                             // fix reviews not showing sometimes, and sometimes I get different html
                             Document doc = Jsoup.parse(productResponse.getHtml());
                             String stock = doc.select("span.a-color-price").text();
@@ -97,7 +124,7 @@ public class AmazonScrapperImp implements AmazonScrapper    {
                                     .name(doc.select("h2").text())
                                     .price(price)
                                     .image(doc.select("img").attr("src"))
-                                    .productUrl("https://" + HOST_NAME + "/dp/" + productResponse.getAsin())
+                                    .productUrl("https://" + AMAZON_HOST_NAME + "/dp/" + productResponse.getAsin())
                                     .asin(productResponse.getAsin())
                                     .customerReviewAverage(Objects.equals(reviewAverage, "") ? 0 :
                                             Double.parseDouble(reviewAverage.split(" ")[0]))
@@ -175,8 +202,8 @@ public class AmazonScrapperImp implements AmazonScrapper    {
     }
     private HttpHeaders getAmazonHeader() {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Host", HOST_NAME);
-        headers.set("authority", HOST_NAME);
+        headers.set("Host", AMAZON_HOST_NAME);
+        headers.set("authority", AMAZON_HOST_NAME);
         headers.set("accept", "text/html,application/xhtml+xml,application/xml;" +
                 "q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
         headers.set("accept-language", "en-US,en;q=0.5");
