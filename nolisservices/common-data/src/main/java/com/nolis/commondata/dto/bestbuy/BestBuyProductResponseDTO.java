@@ -4,12 +4,16 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @ToString
 @Builder @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class BestBuyProductResponseDTO {
+public class BestBuyProductResponseDTO implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 4555735174035964837L;
     private Integer currentPage;
     @JsonProperty("total")
     private Integer totalItems;
@@ -25,7 +29,9 @@ public class BestBuyProductResponseDTO {
 
     @Getter @Setter @AllArgsConstructor @NoArgsConstructor
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    public static class BestBuyProduct{
+    public static class BestBuyProduct implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 4555735174035964937L;
         private String sku;
         private String name;
         private String shortDescription;
@@ -51,7 +57,9 @@ public class BestBuyProductResponseDTO {
     }
 
     @Getter @AllArgsConstructor @NoArgsConstructor
-    public static class BestBuySeller {
+    public static class BestBuySeller implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 4555735174035965937L;
         private Boolean canSell;
         private String id;
         private String name;
