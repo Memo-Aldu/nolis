@@ -1,4 +1,4 @@
-package com.nolis.authenticationserver.security;
+package com.nolis.authenticationserver.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

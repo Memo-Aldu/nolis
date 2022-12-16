@@ -1,7 +1,7 @@
 package com.nolis.authenticationserver.apihelper;
 
 import com.nolis.authenticationserver.exception.*;
-import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
 import com.nolis.commondata.exception.AppEntityAlreadyExistException;
 import com.nolis.commondata.exception.AppEntityNotFoundException;
 import com.nolis.commondata.exception.BadRequestException;

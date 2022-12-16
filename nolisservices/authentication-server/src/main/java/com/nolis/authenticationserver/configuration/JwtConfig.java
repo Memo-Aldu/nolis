@@ -1,4 +1,4 @@
-package com.nolis.authenticationserver.security;
+package com.nolis.authenticationserver.configuration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

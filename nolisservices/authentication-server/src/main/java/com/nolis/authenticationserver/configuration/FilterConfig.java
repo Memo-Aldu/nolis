@@ -1,4 +1,4 @@
-package com.nolis.authenticationserver.filter;
+package com.nolis.authenticationserver.configuration;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;

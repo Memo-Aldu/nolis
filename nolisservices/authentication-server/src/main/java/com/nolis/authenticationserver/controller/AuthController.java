@@ -8,7 +8,7 @@ import com.nolis.authenticationserver.exception.TokenAuthenticationException;
 import com.nolis.authenticationserver.exception.UnauthorizedTokenException;
 import com.nolis.authenticationserver.security.JwtUtils;
 import com.nolis.authenticationserver.service.JwtAuthenticationService;
-import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

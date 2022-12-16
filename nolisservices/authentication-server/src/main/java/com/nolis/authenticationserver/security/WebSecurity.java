@@ -1,13 +1,14 @@
 package com.nolis.authenticationserver.security;
 
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
+import com.nolis.authenticationserver.configuration.EndpointConfig;
+import com.nolis.authenticationserver.configuration.JwtConfig;
 import com.nolis.authenticationserver.filter.JwtAuthorizationFilter;
 import com.nolis.authenticationserver.filter.JwtUsernameAndPasswordAuthenticationFilter;
 import com.nolis.authenticationserver.service.AppUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -40,12 +41,12 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(STATELESS)
                 .and().authorizeRequests()
-                    .antMatchers(endpointConfig.openEndpoints).permitAll()
-                    .antMatchers(endpointConfig.userEndpoints)
+                    .antMatchers(endpointConfig.getOpenEndpoints()).permitAll()
+                    .antMatchers(endpointConfig.getUserEndpoints())
                         .hasAnyAuthority("ROLE_APP_USER")
-                    .antMatchers(endpointConfig.adminEndpoints)
+                    .antMatchers(endpointConfig.getAdminEndpoints())
                         .hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN")
-                    .antMatchers(endpointConfig.superAdminEndpoints)
+                    .antMatchers(endpointConfig.getSuperAdminEndpoints())
                         .hasAuthority("ROLE_SUPER_ADMIN")
                 .anyRequest().authenticated()
                 .and().addFilter(jwtUsernameAndPasswordAuthenticationFilter)

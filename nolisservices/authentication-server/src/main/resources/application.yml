@@ -33,3 +33,14 @@ application:
     refreshHeader: refresh_token
     issuer: nolis
     audience: nolis
+  service:
+    redis:
+      cache:
+
+        - name: "search"
+          ttl: 20
+          unit: SECONDS
+
+        - name: "bb-location"
+          ttl: 5
+          unit: MINUTES
