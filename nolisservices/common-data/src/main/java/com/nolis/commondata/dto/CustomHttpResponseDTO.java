@@ -1,4 +1,4 @@
-package com.nolis.commondata.dto.http;
+package com.nolis.commondata.dto;
 
 import lombok.*;
 import org.springframework.http.HttpStatus;
