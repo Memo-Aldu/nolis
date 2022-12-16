@@ -1,6 +1,6 @@
 package com.nolis.productsearch.configuration;
 
-import com.nolis.productsearch.dto.CacheDTO;
+import com.nolis.commondata.dto.CacheDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

@@ -2,7 +2,7 @@ package com.nolis.productsearch.controller;
 
 import com.nolis.commondata.dto.amazon.AmazonSearchResultsDTO;
 import com.nolis.commondata.dto.bestbuy.BestBuySearchResultsDTO;
-import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
 import com.nolis.commondata.enums.ProductType;
 import com.nolis.commondata.exception.BadRequestException;
 import com.nolis.commondata.exception.TokenUnauthorizedToScopeException;

@@ -1,6 +1,6 @@
 package com.nolis.searchregistry.helper;
 
-import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
 import com.nolis.commondata.exception.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

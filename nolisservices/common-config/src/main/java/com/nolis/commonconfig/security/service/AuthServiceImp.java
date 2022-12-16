@@ -1,9 +1,7 @@
 package com.nolis.commonconfig.security.service;
 
 
-import com.nolis.commondata.dto.http.CustomHttpResponseDTO;
-import com.nolis.commondata.exception.HttpClientErrorException;
-import com.nolis.commondata.exception.HttpExternalServerErrorException;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
