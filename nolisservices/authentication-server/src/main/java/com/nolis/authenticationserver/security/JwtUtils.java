@@ -8,6 +8,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.nolis.authenticationserver.configuration.JwtConfig;
 import com.nolis.authenticationserver.exception.InvalidTokenException;
 import com.nolis.authenticationserver.model.AppUser;
+import com.nolis.authenticationserver.model.Role;
 import com.nolis.authenticationserver.service.AppUserService;
 import com.nolis.commondata.exception.AppEntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -38,7 +39,7 @@ public class JwtUtils {
                 .withExpiresAt(java.sql.Date.valueOf(LocalDate.now()
                         .plusDays(jwtConfig.tokenExpirationAfterDays())))
                 .withClaim("authorities", appUser.getAuthorities().stream()
-                        .map(SimpleGrantedAuthority::getAuthority)
+                        .map(Role::getAuthority)
                         .collect(Collectors.toList()))
                 .sign(algorithm());
     }

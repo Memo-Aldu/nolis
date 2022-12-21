@@ -91,7 +91,8 @@ public record AppUserController(
 
     @PostMapping("/save")
     public ResponseEntity<CustomHttpResponseDTO> getUsers(@RequestBody AppUser appUser) {
-        if(!appUser.isValidEntity()) {
+        if(appUser.getUsername() == null && appUser.getPassword()
+                == null && appUser.getEmail() == null) {
             throw new BadRequestException("Invalid request body for "+appUser);
         }
         HttpHeaders headers = new HttpHeaders();
@@ -117,7 +118,7 @@ public record AppUserController(
             throw new BadRequestException("Invalid request body for "+request);
         }
         HttpHeaders headers = new HttpHeaders();
-        log.info("Adding role {} to user {}", request.roleName(), request.userId());
+        log.info("Adding role {} to user {}", request.authority(), request.userId());
         Map<String, Object> data = Map.of(
                 "user", appUserService
                         .addRoleToUserByIdOrEmail(request)

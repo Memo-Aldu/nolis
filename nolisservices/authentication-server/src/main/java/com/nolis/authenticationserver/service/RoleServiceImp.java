@@ -24,9 +24,9 @@ public class RoleServiceImp implements RoleService {
     @Override
     public Role saveRole(Role role) {
         log.info("Saving new role {} to the database", role.toString());
-        Optional<Role> OptionalRole = roleRepo.findRoleByName(role.getName());
+        Optional<Role> OptionalRole = roleRepo.findRoleByAuthority(role.getAuthority());
         if (OptionalRole.isPresent()) {
-            log.info("Role {} already exists", role.getName());
+            log.info("Role {} already exists", role.getAuthority());
             throw new AppEntityAlreadyExistException("Role already exists");
         }
         return roleRepo.save(role);
@@ -47,8 +47,8 @@ public class RoleServiceImp implements RoleService {
     @Override
     public Role getRoleByIdOrName(RoleRequest roleRequest) {
         log.info("Getting role {}", roleRequest);
-        return roleRepo.findRoleByIdOrName(
-                roleRequest.id(), roleRequest.name()).orElseThrow(
+        return roleRepo.findRoleByIdOrAuthority(
+                roleRequest.id(), roleRequest.authority()).orElseThrow(
                 () -> new IllegalStateException("Role not found")
         );
     }
@@ -58,14 +58,14 @@ public class RoleServiceImp implements RoleService {
     public void deleteRoleByIdOrName(RoleRequest request) {
         //delete the user and check if the user exists
         log.info("Deleting role {}", request);
-        if(!roleRepo.existsRoleByNameOrId(request.name(), request.id())) {
+        if(!roleRepo.existsRoleByAuthorityOrId(request.authority(), request.id())) {
             log.warn("User {} does not exist", request);
             throw new AppEntityNotFoundException("Role does not exist, request: " + request);
         }
-        if(Objects.equals(request.name(), SUPER_ADMIN_ROLE_NAME) || Objects.equals(request.id(), SUPER_ADMIN_ROLE_ID)) {
+        if(Objects.equals(request.authority(), SUPER_ADMIN_ROLE_NAME) || Objects.equals(request.id(), SUPER_ADMIN_ROLE_ID)) {
             log.warn("Cannot delete super admin role");
             throw new IllegalStateException("Cannot delete super admin role");
         }
-        roleRepo.deleteRoleByNameOrId(request.name(), request.id());
+        roleRepo.deleteRoleByAuthorityOrId(request.authority(), request.id());
     }
 }

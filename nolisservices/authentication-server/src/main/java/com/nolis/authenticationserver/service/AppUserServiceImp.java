@@ -8,10 +8,11 @@ import com.nolis.authenticationserver.repository.AppUserRepo;
 import com.nolis.authenticationserver.repository.RoleRepo;
 import com.nolis.commondata.exception.AppEntityAlreadyExistException;
 import com.nolis.commondata.exception.AppEntityNotFoundException;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,13 +22,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Service @Slf4j
-public record AppUserServiceImp(
-        AppUserRepo appUserRepo,
-        RoleRepo roleRepo,
-        BCryptPasswordEncoder passwordEncoder) implements AppUserService {
+@AllArgsConstructor
+@CacheConfig(cacheNames={"AppUsers"})
+public class AppUserServiceImp implements AppUserService {
+    private final AppUserRepo appUserRepo;
+    private final RoleRepo roleRepo;
+    private final BCryptPasswordEncoder passwordEncoder;
     static final Role defaultRole = new Role("ROLE_APP_USER");
 
     @Override
+    @Caching(put = {
+            //not caching id because it is not created yet
+                    @CachePut(key = "#appUser.email")}
+    )
     public AppUser saveAppUser(AppUser appUser) {
         appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
         log.info("Saving new user {} to the database", appUser.toString());
@@ -39,13 +46,14 @@ public record AppUserServiceImp(
             throw new AppEntityAlreadyExistException("User already exists");
         }
         // if appUser does not have the default role
-        if (!appUser.getAuthorities().contains(new SimpleGrantedAuthority(defaultRole.getName()))) {
+        if (!appUser.getAuthorities().contains(defaultRole)) {
             appUser.addRole(defaultRole);
+            log.info("Adding default role to user {}", appUser.getEmail());
         }
         return appUserRepo.save(appUser);
     }
 
-    @Override
+    @Override //not used yet
     public AppUser getAppUserByIdOrEmail(AppUserRequest request) {
 
         log.info("Getting user {}", request);
@@ -56,16 +64,21 @@ public record AppUserServiceImp(
     }
 
     @Override
-    public Collection<SimpleGrantedAuthority> addRoleToUserByIdOrEmail(AddRoleRequest request) {
-        Role role = roleRepo.findRoleByName(request.roleName())
+    @Caching(evict = {
+            // clearing the cache for the user with the id or email
+                    @CacheEvict(key = "#request.email()", condition = "#request.email() != null"),
+                    @CacheEvict(key = "#request.userId()", condition = "#request.userId() != null")}
+    )
+    public Collection<Role> addRoleToUserByIdOrEmail(AddRoleRequest request) {
+        Role role = roleRepo.findRoleByAuthority(request.authority())
                 .orElseThrow(() -> new AppEntityNotFoundException("Role does not exist, " +
-                        "role: " + request.roleName()));
+                        "role: " + request.authority()));
         AppUser appUser = appUserRepo.findAppUserByEmailOrId
                 (request.email(), request.userId()).orElseThrow(
                 () -> new AppEntityNotFoundException("User does not exist, " +
                         "userId: " + request.userId() + ", email: " + request.email())
         );
-        if(appUser.getAuthorities().contains(new SimpleGrantedAuthority(role.getName()))) {
+        if(appUser.getAuthorities().contains(role)) {
             throw new AppEntityAlreadyExistException("User already has this role");
         }
         log.info("Adding role {} with request user {}",
@@ -86,6 +99,7 @@ public record AppUserServiceImp(
     }
 
     @Override
+    @Cacheable(key = "#email")
     public AppUser getUserByEmail(String email) {
         log.info("Getting user by email");
         return appUserRepo.findAppUserByEmail(email).orElseThrow(
@@ -94,6 +108,7 @@ public record AppUserServiceImp(
     }
 
     @Override
+    @Cacheable(key = "#request.email()", unless = "#request.email() == null")
     public AppUser getAppUserByIdOrEmailAndPassword(AppUserRequest request) {
         log.info("Getting user by id or email and password");
         AppUser user = appUserRepo.findAppUserByEmailOrId(
@@ -107,6 +122,7 @@ public record AppUserServiceImp(
     }
 
     @Override
+    @CacheEvict(key = "#request.email()")
     public void deleteUserByIdOrEmail(AppUserRequest request) {
         //delete the user and check if the user exists
         log.info("Deleting user {}", request);
@@ -124,14 +140,16 @@ public record AppUserServiceImp(
     }
 
     @Override
+    @Cacheable(key = "#email")
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        log.info("Getting user by email");
         return  appUserRepo.findAppUserByEmail(email)
                 .orElseThrow(() -> new AppEntityNotFoundException
                         ("User with email " + email + "not found in the DB"));
     }
 
 
-    private Collection<SimpleGrantedAuthority> addRoleToUser(AppUser appUser, Role role) {
+    private Collection<Role> addRoleToUser(AppUser appUser, Role role) {
         appUser.addRole(role);
         appUserRepo.save(appUser);
         return appUser.getAuthorities();

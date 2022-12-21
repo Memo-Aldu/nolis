@@ -1,13 +1,20 @@
 package com.nolis.authenticationserver.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -15,7 +22,9 @@ import java.util.stream.Collectors;
 @Data
 @Document("app_users")
 @NoArgsConstructor
-public class AppUser implements UserDetails {
+public class AppUser implements UserDetails, Serializable {
+    @Serial
+    private static final long serialVersionUID = 4525755174865964836L;
     @Id
     private String id;
     @Indexed(unique = true)
@@ -32,7 +41,7 @@ public class AppUser implements UserDetails {
     private boolean isEnabled;
     private boolean isEmailVerified;
     private boolean isPhoneVerified;
-    private Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+    private Collection<Role> authorities = new ArrayList<>();
 
     public AppUser(Long discordId, String username,
                    String password, String email,
@@ -51,29 +60,19 @@ public class AppUser implements UserDetails {
         this.isEnabled = isEnabled;
         this.isEmailVerified = isEmailVerified;
         this.isPhoneVerified = isPhoneVerified;
-        this.authorities = roles.stream().map(
-                role -> new SimpleGrantedAuthority(
-                        role.getName())).collect(Collectors.toList()
-        );
+        this.authorities = roles;
     }
 
     public void setAuthorities(Collection<Role> roles) {
-        this.authorities = roles.stream().map(
-                role -> new SimpleGrantedAuthority(
-                        role.getName())).collect(Collectors.toList()
-        );
+        this.authorities = roles;
     }
 
     public void addRole(Role role) {
-        this.authorities.add(new SimpleGrantedAuthority(role.getName()));
+        this.authorities.add(role);
     }
 
     public void removeRole(Role role) {
-        this.authorities.remove(new SimpleGrantedAuthority(role.getName()));
-    }
-
-    public boolean isValidEntity() {
-        return this.username != null && this.password != null && this.email != null;
+        this.authorities.remove(role);
     }
 
 }

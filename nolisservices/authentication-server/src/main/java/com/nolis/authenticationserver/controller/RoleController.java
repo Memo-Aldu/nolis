@@ -23,7 +23,7 @@ public record RoleController(
 
     @PostMapping("/save")
     public ResponseEntity<CustomHttpResponseDTO> saveRole(@RequestBody Role role) {
-        if(!role.isValidEntity()) {
+        if(role.getAuthority() == null) {
             throw new BadRequestException("Invalid request body for "+role);
         }
         HttpHeaders headers = new HttpHeaders();
