@@ -4,9 +4,11 @@ import com.nolis.commondata.enums.ProductType;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
 @Builder
-public class Search {
+public class Search implements Serializable {
 
     private String id;
     private String userId;
