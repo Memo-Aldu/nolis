@@ -21,7 +21,7 @@ import java.util.Map;
 
 @AllArgsConstructor
 @Slf4j
-public class RedisCacheConfig {
+public class AppRedisCacheConfig {
     private final String host;
     private final Integer port;
     private final List<CacheDTO> caches;

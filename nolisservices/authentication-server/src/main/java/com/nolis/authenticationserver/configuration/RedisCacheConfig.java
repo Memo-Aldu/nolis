@@ -1,5 +1,6 @@
 package com.nolis.authenticationserver.configuration;
 
+import com.nolis.commonconfig.redis.AppRedisCacheConfig;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,15 +16,15 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter @Setter @Slf4j
 public class RedisCacheConfig {
-    private final AppRedisConfiguration appRedisConfiguration;
-    private final com.nolis.commonconfig.redis.RedisCacheConfig commonRedisCacheConfig;
+    private final AppRedisProperties appRedisProperties;
+    private final AppRedisCacheConfig appRedisCacheConfig;
 
-    public RedisCacheConfig(AppRedisConfiguration appRedisConfiguration) {
-        this.appRedisConfiguration = appRedisConfiguration;
-        this.commonRedisCacheConfig = new com.nolis.commonconfig.redis.RedisCacheConfig(
-                this.appRedisConfiguration.getHost(),
-                this.appRedisConfiguration.getPort(),
-                this.appRedisConfiguration.getCache()
+    public RedisCacheConfig(AppRedisProperties appRedisProperties) {
+        this.appRedisProperties = appRedisProperties;
+        this.appRedisCacheConfig = new AppRedisCacheConfig(
+                this.appRedisProperties.getHost(),
+                this.appRedisProperties.getPort(),
+                this.appRedisProperties.getCache()
         );
     }
 
@@ -31,14 +32,14 @@ public class RedisCacheConfig {
     @Primary
     public ReactiveRedisConnectionFactory myRedisConnectionFactory() {
         log.info("Info -> Lettuce Connection Factory: "
-                + this.appRedisConfiguration.host + ":" + this.appRedisConfiguration.port);
-        return commonRedisCacheConfig.myRedisConnectionFactory();
+                + this.appRedisProperties.getHost() + ":" + this.appRedisProperties.getPort());
+        return appRedisCacheConfig.myRedisConnectionFactory();
     }
 
     @Bean
     public RedisCacheManager cacheManager(LettuceConnectionFactory lettuceConnectionFactory) {
         log.info("Info -> Redis Cache Manager");
-        return commonRedisCacheConfig.cacheManager(lettuceConnectionFactory);
+        return appRedisCacheConfig.cacheManager(lettuceConnectionFactory);
     }
 
 }
