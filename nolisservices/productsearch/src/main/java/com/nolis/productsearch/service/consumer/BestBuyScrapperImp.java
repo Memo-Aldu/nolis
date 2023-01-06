@@ -12,6 +12,7 @@ import com.nolis.commondata.exception.HttpClientErrorException;
 import com.nolis.productsearch.helper.RandomUserAgent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -26,19 +27,17 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 
-import static com.nolis.commondata.constants.Caches.*;
 import static com.nolis.commondata.constants.Servers.BESTBUY_HOST_NAME;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.http.client.params.ClientPNames.COOKIE_POLICY;
-import static org.apache.http.client.params.CookiePolicy.BROWSER_COMPATIBILITY;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 @Service @Slf4j
 @Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
+@CacheConfig(cacheNames={"AppBBSearch"})
+
 public class BestBuyScrapperImp implements BestBuyScrapper {
     @Qualifier("withoutLoadBalanced")
     private final RestTemplate restTemplate;
@@ -63,7 +62,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return BestBuyProductsDTO
      */
     @Override
-    @Cacheable(value = SEARCH, key = "'best-buy_'.concat(#search.toString())")
+    @Cacheable(key = "'search-stock-info:'.concat(#search.toString())")
     public BestBuySearchResultsDTO searchBestBuyWithStock(Search search) {
         try {
             log.info("Getting products from BestBuy for search: {}", search);
@@ -132,7 +131,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return BestBuyProductDetailDTO
      */
     @Override
-    @Cacheable(value = SEARCH, key = "'best-buy_'.concat(#search.toString())")
+    @Cacheable(key = "'search:'.concat(#search.toString())")
     public BestBuySearchResultsDTO searchBestBuy(Search search) {
         log.info("Calling BestBuy products API");
         // Todo: custom headers for each request
@@ -177,7 +176,7 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
      * @return BestBuyLocationDTO
      */
     @Override
-    @Cacheable(value = BEST_BUY_LOCATIONS, key = "#location")
+    @Cacheable(key = "'location:'.concat(#location)")
     public BestBuyStoreLocationDTO getLocation(String location) {
         // Todo: custom headers for each request
         log.info("Calling BestBuy Location API");
@@ -313,7 +312,6 @@ public class BestBuyScrapperImp implements BestBuyScrapper {
         HttpHeaders headers = new HttpHeaders();
         headers.add("authority", "sdk.split.io");
         headers.add("Connection", "keep-alive");
-        headers.add(COOKIE_POLICY, BROWSER_COMPATIBILITY);
         headers.set(CONTENT_TYPE, APPLICATION_JSON);
         headers.set("accept", "application/json");
         // safari useragent because it's faster with bestbuy

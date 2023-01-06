@@ -13,6 +13,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -29,12 +30,12 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static com.nolis.commondata.constants.Caches.SEARCH;
 import static com.nolis.commondata.constants.Servers.AMAZON_HOST_NAME;
 
 
 @Service @Slf4j
 @Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
+@CacheConfig(cacheNames={"AppAmazonSearch"})
 public class AmazonScrapperImp implements AmazonScrapper    {
 
     @Qualifier("withoutLoadBalanced")
@@ -54,7 +55,7 @@ public class AmazonScrapperImp implements AmazonScrapper    {
 
     // TODO: 2022-11-28  Add Pagination
     @Override
-    @Cacheable(value = SEARCH, key = "'amazon_'.concat(#search.toString())")
+    @Cacheable(key = "'amazon_'.concat(#search.toString())")
     public AmazonSearchResultsDTO getProductsBySearchQuery(Search search) {
         String productResponse = makeCallToAmazonAPI(search);
         if (productResponse == null) {
@@ -79,7 +80,7 @@ public class AmazonScrapperImp implements AmazonScrapper    {
     }
 
     /**
-     * Async call to get the best buy product details and stock information
+     * Async call to get the best-buy product details and stock information
      * @param search Search
      * @return CompletableFuture<BestBuyLocationDTO>
      */

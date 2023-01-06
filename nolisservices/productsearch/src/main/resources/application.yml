@@ -36,14 +36,14 @@ application:
       amazonProductUrl: "https://www.amazon.ca/s/query?k=%s&page=%s"
   service:
     redis:
+      host: "localhost"
+      port: 6379
       cache:
-
-        - name: "search"
-          ttl: 20
-          unit: SECONDS
-
-        - name: "bb-location"
-          ttl: 5
+        - name: "AppAmazonSearch"
+          ttl: 1
+          unit: MINUTES
+        - name: "AppBBSearch"
+          ttl: 1
           unit: MINUTES
 
 
