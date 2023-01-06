@@ -42,8 +42,8 @@ application:
           ttl: 20
           unit: SECONDS
         - name: "AppRoles"
-          ttl: 20
-          unit: SECONDS
+          ttl: 3
+          unit: MINUTES
 
 
 
