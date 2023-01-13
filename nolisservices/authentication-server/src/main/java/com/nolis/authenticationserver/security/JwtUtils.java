@@ -106,6 +106,11 @@ public class JwtUtils {
         return decodedJWT.getClaim("authorities").asArray(String.class);
     }
 
+    public String getSubjectFromToken(String token) {
+        DecodedJWT decodedJWT = decodeAndVerifyJWT(token);
+        return decodedJWT.getSubject();
+    }
+
     private DecodedJWT decodeAndVerifyJWT(String token) throws SignatureVerificationException {
         JWTVerifier verifier = JWT.require(algorithm()).build();
         return verifier.verify(token);
