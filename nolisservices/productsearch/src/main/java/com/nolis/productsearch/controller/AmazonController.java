@@ -31,7 +31,7 @@ public record AmazonController(
             @RequestBody SearchRequest searchRequest,
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "2") Integer pageSize, HttpServletRequest request) {
-        if(!searchRequest.isValidate()) {
+        if (!searchRequest.isValidate()) {
             throw new BadRequestException("Invalid Search Request");
         }
         Search search = Search.builder()
@@ -42,20 +42,20 @@ public record AmazonController(
                 .productType(ProductType.Amazon)
                 .build();
 
-        if(controllerHelper.hasAuthority(request, "ROLE_AMAZON_USER")) {
+        if (controllerHelper.hasAuthority(request, "ROLE_AMAZON_USER")) {
             log.info("Best Buy Search Request {}", search);
             AmazonSearchResultsDTO products = amazonScrapper
                     .getProductsBySearchQuery(search);
             Map<String, Object> data = Map.of(
                     "amazon", products);
             return products.getProducts().size() > 0 ? responseHandler.httpResponse(
-                            CustomHttpResponseDTO.builder()
-                                    .message("Search Request Successful")
-                                    .data(data)
-                                    .success(true)
-                                    .timestamp(System.currentTimeMillis())
-                                    .status(HttpStatus.OK)
-                                    .build(),
+                    CustomHttpResponseDTO.builder()
+                            .message("Search Request Successful")
+                            .data(data)
+                            .success(true)
+                            .timestamp(System.currentTimeMillis())
+                            .status(HttpStatus.OK)
+                            .build(),
                     controllerHelper.setupResponseHeaders(request)) :
                     responseHandler.httpResponse(
                             CustomHttpResponseDTO.builder()
