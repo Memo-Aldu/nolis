@@ -16,6 +16,7 @@
     <module>search-registry</module>
     <module>common-data</module>
     <module>common-config</module>
+    <module>registered-product-search</module>
   </modules>
 
   <name>nolisservices</name>
