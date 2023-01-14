@@ -9,7 +9,6 @@ import com.nolis.commondata.exception.UnauthorizedTokenException;
 import com.nolis.searchregistry.helper.ControllerHelper;
 import com.nolis.searchregistry.helper.ResponseHandler;
 import com.nolis.searchregistry.model.RegisteredSearch;
-import com.nolis.searchregistry.service.producer.KafkaProducer;
 import com.nolis.searchregistry.service.producer.RegistrySearchService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +28,7 @@ import java.util.Map;
 public record SearchRegistryController(
         ControllerHelper controllerHelper,
         ResponseHandler responseHandler,
-        RegistrySearchService registrySearchService,
-        KafkaProducer kafkaService
+        RegistrySearchService registrySearchService
 ) {
 
     // TODO: Need's to be a POST, but POST mapping is not working with @RequestBody
@@ -47,7 +45,6 @@ public record SearchRegistryController(
             registeredSearch.getProduct().setProductType(ProductType.Amazon);
             RegisteredSearch savedRegisteredSearch = registrySearchService
                     .saveRegisteredSearch(registeredSearch);
-            kafkaService.publishMessage(savedRegisteredSearch);
             return getCustomHttpResponseEntity(registeredSearch, request);
         }
         else {
@@ -69,7 +66,6 @@ public record SearchRegistryController(
             registeredSearch.getProduct().setProductType(ProductType.BestBuy);
             RegisteredSearch savedRegisteredSearch = registrySearchService
                     .saveRegisteredSearch(registeredSearch);
-            kafkaService.publishMessage(savedRegisteredSearch);
             return getCustomHttpResponseEntity(registeredSearch, request);
         }
         else {

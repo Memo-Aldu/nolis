@@ -1,5 +1,6 @@
 package com.nolis.searchregistry;
 
+import com.nolis.commondata.dto.RegisteredSearchDTO;
 import com.nolis.searchregistry.model.RegisteredSearch;
 import com.nolis.searchregistry.service.producer.KafkaProducer;
 import com.nolis.searchregistry.service.producer.RegistrySearchService;
@@ -15,6 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
 
+import static com.nolis.commondata.constants.Kafka.SEARCH_REGISTRY_TOPIC;
+
 @EnableScheduling
 @EnableEurekaClient @SpringBootApplication
 @AllArgsConstructor @Slf4j
@@ -27,21 +30,32 @@ public class SearchRegistryApplication {
 
     @Async
     @Scheduled(fixedRate = 20000) // 20 seconds
-    public void scheduleFixedRateTask() throws InterruptedException {
+    public void scheduleFixedRateTask() {
         List<RegisteredSearch> registeredSearches = registrySearchService
                 .getAllRegisteredSearch();
         if(registeredSearches != null && !registeredSearches.isEmpty()){
             log.info("Scheduled task to publish {} registered searches to kafka topic",
                     registeredSearches.size());
-            registeredSearches.forEach(kafkaService::publishMessage);
+            registeredSearches.forEach(
+                    registeredSearch -> kafkaService.publishMessage(
+                            RegisteredSearchDTO.builder()
+                                    .searchLocation(registeredSearch.getSearchLocation())
+                                    .product(registeredSearch.getProduct())
+                                    .id(registeredSearch.getId())
+                                    .isErrored(registeredSearch.getIsErrored())
+                                    .isFound(registeredSearch.getIsFound())
+                                    .userEmail(registeredSearch.getUserEmail())
+                                    .userId(registeredSearch.getUserId())
+                                    .build()
+                    )
+            );
         } else {
             log.info("No registered searches to publish to kafka topic");
         }
-
     }
-
-    @KafkaListener(topics = "search-registry-topic", groupId = "my_group_id_1")
-    public void getMessage(RegisteredSearch message){
-        System.out.println("Message received: " + message);
-    }
+    // will be replaced with another consumer
+/*    @KafkaListener(id = "poc", topics = SEARCH_REGISTRY_TOPIC, groupId = "my_group_id_1")
+    public void getMessage(RegisteredSearchDTO data){
+        System.out.println("Message received: " + data);
+    }*/
 }
