@@ -94,6 +94,34 @@ public class ExceptionHandler extends ResponseEntityExceptionHandler {
                 headers(ex.getMessage()));
     }
 
+    @org.springframework.web.bind.annotation.ExceptionHandler(AppEntityNotFoundException.class)
+    protected ResponseEntity<CustomHttpResponseDTO> handleEntityNotFound(
+            AppEntityNotFoundException ex) {
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .data(Map.of("error", ex.getMessage()))
+                        .timestamp(System.currentTimeMillis())
+                        .status(NOT_FOUND)
+                        .success(false)
+                        .message(ex.getLocalizedMessage())
+                        .build(),
+                headers(ex.getMessage()));
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(AppEntityAlreadyExistException.class)
+    protected ResponseEntity<CustomHttpResponseDTO> handleEntityAlreadyExist(
+            AppEntityAlreadyExistException ex) {
+        return responseHandler.httpResponse(
+                CustomHttpResponseDTO.builder()
+                        .data(Map.of("error", ex.getMessage()))
+                        .timestamp(System.currentTimeMillis())
+                        .status(CONFLICT)
+                        .success(false)
+                        .message(ex.getLocalizedMessage())
+                        .build(),
+                headers(ex.getMessage()));
+    }
+
     private HttpHeaders headers(String message) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");

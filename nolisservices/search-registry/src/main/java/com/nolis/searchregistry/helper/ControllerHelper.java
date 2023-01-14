@@ -2,6 +2,7 @@ package com.nolis.searchregistry.helper;
 
 
 import com.nolis.commonconfig.security.service.AuthService;
+import com.nolis.commondata.dto.JWTAuthDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,11 @@ public class ControllerHelper {
     public boolean hasAuthority(HttpServletRequest request, String scope) {
         String authorizationHeader = request.getHeader(AUTHORIZATION);
         return authService.hasAuthority(authorizationHeader, scope);
+    }
+
+    public JWTAuthDTO decodeJWT(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader(AUTHORIZATION);
+        return authService.decodeJWT(authorizationHeader);
     }
 
     public HttpHeaders setupResponseHeaders(HttpServletRequest request) {
