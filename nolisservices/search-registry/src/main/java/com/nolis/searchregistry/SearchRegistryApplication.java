@@ -29,7 +29,7 @@ public class SearchRegistryApplication {
     }
 
     @Async
-    @Scheduled(fixedRate = 20000) // 20 seconds
+    @Scheduled(fixedRate = 20000, initialDelay = 10000) // 20 seconds
     public void scheduleFixedRateTask() {
         List<RegisteredSearch> registeredSearches = registrySearchService
                 .getAllRegisteredSearch();
