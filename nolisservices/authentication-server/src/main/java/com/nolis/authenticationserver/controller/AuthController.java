@@ -34,12 +34,14 @@ public record AuthController(
     @PostMapping("/decode")
     public ResponseEntity<CustomHttpResponseDTO> decodeJWT(@NonNull HttpServletRequest request) {
         String token = jwtUtils.getTokenFromHeader(request.getHeader(AUTHORIZATION));
+        log.debug("Decoding token {}", token);
         try {
             Map<String, Object> data = Map.of(
                     "subject", jwtUtils.getSubjectFromToken(token),
                     "access_token", token,
                     "authorities", jwtUtils.getAuthoritiesFromToken(token)
             );
+            log.info("Decoded token {}", data);
             return responseHandler.httpResponse(
                     CustomHttpResponseDTO.builder()
                             .message("Token decoded successfully")

@@ -14,7 +14,7 @@ public class EndpointConfig {
     private final String[] openEndpoints = new String[]{
             AUTH_PREFIX+"login", AUTH_PREFIX+"register",
             AUTH_PREFIX+"token/refresh", AUTH_PREFIX+"token/validate",
-            AUTH_PREFIX+"authenticate", AUTH_PREFIX+"has-authority"};
+            AUTH_PREFIX+"authenticate", AUTH_PREFIX+"has-authority", AUTH_PREFIX+"decode"};
 
     private final String[] userEndpoints = new String[]{
             AUTH_PREFIX+"user/profile", AUTH_PREFIX+"user/update",
