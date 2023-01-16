@@ -13,11 +13,9 @@ import java.util.Optional;
 public interface RegisteredSearchRepo extends MongoRepository<RegisteredSearch, String> {
 
     Optional<RegisteredSearch> findRegisteredSearchByIdAndUserEmail(String id, String userEmail);
-    // select from table where RegisteredProduct = ? and (UserId = ? or UserEmail = ?)
-    @Query("{ 'product.productId' : ?0, $or: [ { 'userId' : ?1 }, { 'userEmail' : ?2 } ] }")
-    Optional<RegisteredSearch> findRegisteredSearchByProductIdAndUser(String productId, String userId, String userEmail);
-    Optional<ArrayList<RegisteredSearch>> findRegisteredSearchesByUserIdOrUserEmail(String userId, String userEmail);
-    // select from table where RegisteredProduct.id = registeredProductId
+    @Query("{ 'product.productId' : ?0, 'userEmail' : ?1 }")
+    Optional<RegisteredSearch> findRegisteredSearchByProductIdAndUserEmail(String productId, String userEmail);
+    Optional<ArrayList<RegisteredSearch>> findRegisteredSearchesByUserEmail(String userEmail);
     @Query("{ 'product.productId' : ?0 }")
     Optional<ArrayList<RegisteredSearch>> findRegisteredSearchesByProductId(String productId);
 

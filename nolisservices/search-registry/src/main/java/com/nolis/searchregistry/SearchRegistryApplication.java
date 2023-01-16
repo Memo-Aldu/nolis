@@ -28,7 +28,7 @@ public class SearchRegistryApplication {
         SpringApplication.run(SearchRegistryApplication.class, args);
     }
 
-    @Async
+    @Async("AppAsyncExecutor")
     @Scheduled(fixedRate = 20000, initialDelay = 10000) // 20 seconds
     public void scheduleFixedRateTask() {
         List<RegisteredSearch> registeredSearches = registrySearchService
@@ -37,7 +37,7 @@ public class SearchRegistryApplication {
             log.info("Scheduled task to publish {} registered searches to kafka topic",
                     registeredSearches.size());
             registeredSearches.forEach(
-                    registeredSearch -> kafkaService.publishMessage(
+                    registeredSearch -> kafkaService.publishMessageSearchRegistry(
                             RegisteredSearchDTO.builder()
                                     .searchLocation(registeredSearch.getSearchLocation())
                                     .product(registeredSearch.getProduct())
@@ -45,7 +45,6 @@ public class SearchRegistryApplication {
                                     .isErrored(registeredSearch.getIsErrored())
                                     .isFound(registeredSearch.getIsFound())
                                     .userEmail(registeredSearch.getUserEmail())
-                                    .userId(registeredSearch.getUserId())
                                     .build()
                     )
             );

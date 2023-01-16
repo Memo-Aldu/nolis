@@ -1,6 +1,7 @@
 package com.nolis.searchregistry.configuration;
 
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -12,7 +13,8 @@ import java.util.concurrent.Executor;
 @EnableAsync
 public class AsyncConfiguration {
     @Bean
-    public Executor asyncExecutor() {
+    @Qualifier("AppAsyncExecutor")
+    public Executor asyncExecutorBean() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);
         executor.setMaxPoolSize(25);

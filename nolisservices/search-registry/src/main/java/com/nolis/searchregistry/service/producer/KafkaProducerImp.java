@@ -10,6 +10,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import static com.nolis.commondata.constants.Kafka.DELETED_SEARCH_TOPIC;
 import static com.nolis.commondata.constants.Kafka.SEARCH_REGISTRY_TOPIC;
 
 @Service
@@ -18,12 +19,23 @@ public class KafkaProducerImp implements KafkaProducer {
     private final KafkaTemplate<String, RegisteredSearchDTO> kafkaTemplate;
 
     @Override
-    public void publishMessage(RegisteredSearchDTO data) {
+    public void publishMessageSearchRegistry(RegisteredSearchDTO data) {
         log.info("Publishing to kafka topic: {} with message: {}",
                 SEARCH_REGISTRY_TOPIC, data);
         Message<RegisteredSearchDTO> message = MessageBuilder
                 .withPayload(data)
                 .setHeader(KafkaHeaders.TOPIC, SEARCH_REGISTRY_TOPIC)
+                .build();
+        this.kafkaTemplate.send(message);
+    }
+
+    @Override
+    public void publishMessageDeletedSearch(RegisteredSearchDTO data) {
+        log.info("Publishing to kafka topic: {} with message: {}",
+                DELETED_SEARCH_TOPIC, data);
+        Message<RegisteredSearchDTO> message = MessageBuilder
+                .withPayload(data)
+                .setHeader(KafkaHeaders.TOPIC, DELETED_SEARCH_TOPIC)
                 .build();
         this.kafkaTemplate.send(message);
     }

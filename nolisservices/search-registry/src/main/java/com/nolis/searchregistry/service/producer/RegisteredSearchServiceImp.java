@@ -1,5 +1,6 @@
 package com.nolis.searchregistry.service.producer;
 
+import com.nolis.commondata.dto.RegisteredSearchDTO;
 import com.nolis.commondata.exception.AppEntityAlreadyExistException;
 import com.nolis.commondata.exception.AppEntityNotFoundException;
 import com.nolis.searchregistry.model.RegisteredSearch;
@@ -15,14 +16,14 @@ import java.util.Optional;
 @AllArgsConstructor @Service @Slf4j
 public class RegisteredSearchServiceImp implements RegistrySearchService {
     private final RegisteredSearchRepo registeredSearchRepo;
+    private final KafkaProducer kafkaProducer;
 
     @Override
     public RegisteredSearch saveRegisteredSearch(RegisteredSearch registeredSearch) {
         log.info("Saving registered search: {}", registeredSearch);
         Optional<RegisteredSearch> optionalRegisteredSearch = registeredSearchRepo
-                .findRegisteredSearchByProductIdAndUser(
+                .findRegisteredSearchByProductIdAndUserEmail(
                         registeredSearch.getProduct().getProductId(),
-                        registeredSearch.getUserId(),
                         registeredSearch.getUserEmail());
         if(optionalRegisteredSearch.isPresent()) {
             throw new AppEntityAlreadyExistException("Registered search already exists");
@@ -38,11 +39,9 @@ public class RegisteredSearchServiceImp implements RegistrySearchService {
                         registeredSearch.getId(), registeredSearch.getUserEmail());
         if(optionalRegisteredSearch.isEmpty()) {
             optionalRegisteredSearch = registeredSearchRepo
-                    .findRegisteredSearchByProductIdAndUser(
+                    .findRegisteredSearchByProductIdAndUserEmail(
                             registeredSearch.getProduct().getProductId(),
-                            registeredSearch.getUserId(),
-                            registeredSearch.getUserEmail()
-                    );
+                            registeredSearch.getUserEmail());
             if(optionalRegisteredSearch.isEmpty()) {
                 throw new AppEntityNotFoundException("Registered search not found");
             }
@@ -51,12 +50,12 @@ public class RegisteredSearchServiceImp implements RegistrySearchService {
     }
 
     @Override
-    public ArrayList<RegisteredSearch> getRegisteredSearchesByUserIdOrUserEmail(String userId, String userEmail) {
-        log.info("Getting registered searches by user id: {} or user email: {}", userId, userEmail);
+    public ArrayList<RegisteredSearch> getRegisteredSearchesUserEmail(String userEmail) {
+        log.info("Getting registered searches by user email: {}", userEmail);
         Optional<ArrayList<RegisteredSearch>> registeredSearches = registeredSearchRepo
-                .findRegisteredSearchesByUserIdOrUserEmail(userId, userEmail);
+                .findRegisteredSearchesByUserEmail(userEmail);
         if(registeredSearches.isEmpty()) {
-            log.info("No registered searches found for user id: {} or user email: {}", userId, userEmail);
+            log.info("No registered searches found for user email: {}", userEmail);
             return new ArrayList<>();
         }
         return registeredSearches.get();
@@ -96,12 +95,16 @@ public class RegisteredSearchServiceImp implements RegistrySearchService {
         log.info("Deleting registered search with id: {}", id);
         RegisteredSearch registeredSearch = getRegisteredSearchByIdAndUserEmail(id, userEmail);
         registeredSearchRepo.delete(registeredSearch);
+        // send delete message to kafka
+        kafkaProducer.publishMessageDeletedSearch(
+                convertToDTO(registeredSearch)
+        );
     }
 
     @Override
-    public void deleteRegisteredSearchesByUserIdOrUserEmail(String userId, String userEmail) {
-        log.info("Deleting registered search with userId {} or userEmail {}", userId, userEmail);
-        ArrayList<RegisteredSearch> registeredSearches = getRegisteredSearchesByUserIdOrUserEmail(userId, userEmail);
+    public void deleteRegisteredSearchesByUserEmail(String userEmail) {
+        log.info("Deleting all registered search for userEmail {}", userEmail);
+        ArrayList<RegisteredSearch> registeredSearches = getRegisteredSearchesUserEmail(userEmail);
         if(registeredSearches.isEmpty()) {
             throw new AppEntityNotFoundException("Registered search not found");
         }
@@ -119,6 +122,18 @@ public class RegisteredSearchServiceImp implements RegistrySearchService {
         }
         else {
             registeredSearchRepo.deleteAll(registeredSearches);
+
         }
     }
+
+    private RegisteredSearchDTO convertToDTO(RegisteredSearch registeredSearch) {
+        return RegisteredSearchDTO.builder()
+                .id(registeredSearch.getId())
+                .userEmail(registeredSearch.getUserEmail())
+                .product(registeredSearch.getProduct())
+                .isFound(registeredSearch.getIsFound())
+                .isErrored(registeredSearch.getIsErrored())
+                .build();
+    }
+
 }

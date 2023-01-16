@@ -22,7 +22,6 @@ public class RegisteredSearch implements Serializable {
 
     @Id
     private String id;
-    private String userId;
     private String userEmail;
     private String searchLocation;
     private RegisteredProduct product;
@@ -30,9 +29,8 @@ public class RegisteredSearch implements Serializable {
     private Boolean isErrored = false;
 
     public boolean isValidEntity() {
-        if(product == null || !product.isValidEntity()) {
-            return false;
-        }
-        return !((userId == null || userId.isEmpty()) && (userEmail == null || userEmail.isEmpty()));
+
+        return userEmail != null && !userEmail.isEmpty()
+                && product != null && product.isValidEntity();
     }
 }

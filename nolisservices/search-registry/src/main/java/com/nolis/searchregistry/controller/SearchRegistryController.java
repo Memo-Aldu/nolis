@@ -9,6 +9,7 @@ import com.nolis.commondata.exception.UnauthorizedTokenException;
 import com.nolis.searchregistry.helper.ControllerHelper;
 import com.nolis.searchregistry.helper.ResponseHandler;
 import com.nolis.searchregistry.model.RegisteredSearch;
+import com.nolis.searchregistry.service.producer.KafkaProducer;
 import com.nolis.searchregistry.service.producer.RegistrySearchService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +31,28 @@ public record SearchRegistryController(
         ResponseHandler responseHandler,
         RegistrySearchService registrySearchService
 ) {
+    @GetMapping("/test")
+    public String test() {
+        return "Hello World";
+    }
 
     // TODO: Need's to be a POST, but POST mapping is not working with @RequestBody
     @GetMapping (value = "/amazon", consumes = "application/json", produces = "application/json")
     public ResponseEntity<CustomHttpResponseDTO> saveAmazonSearch(
             @RequestBody RegisteredSearch registeredSearch, HttpServletRequest request) {
-        log.info("New Search Request {}", registeredSearch);
-        if(!registeredSearch.isValidEntity()) {
-            log.warn("Invalid Search Request {}", registeredSearch);
-            throw new BadRequestException("Invalid request body for " + registeredSearch);
-        }
-        log.info("New Search Request {}", registeredSearch);
-        if(controllerHelper.hasAuthority(request,"ROLE_BESTBUY_USER")){
+        log.info("decodeJWT() called with: registeredSearch = [{}], request = [{}]", registeredSearch, request);
+        JWTAuthDTO jwtAuthDTO = controllerHelper.decodeJWT(request);
+        if (isAuthorizedToAccessResource(jwtAuthDTO, registeredSearch.getUserEmail())) {
+            log.info("New Search Request {}", registeredSearch);
+            if(!registeredSearch.isValidEntity()) {
+                log.warn("Invalid Search Request {}", registeredSearch);
+                throw new BadRequestException("Invalid request body for " + registeredSearch);
+            }
+            log.info("New Search Request {}", registeredSearch);
             registeredSearch.getProduct().setProductType(ProductType.Amazon);
             RegisteredSearch savedRegisteredSearch = registrySearchService
                     .saveRegisteredSearch(registeredSearch);
-            return getCustomHttpResponseEntity(registeredSearch, request);
+            return getCustomHttpResponseEntity(savedRegisteredSearch, request);
         }
         else {
             log.error("User is not authorized to access this resource");
@@ -66,7 +73,7 @@ public record SearchRegistryController(
             registeredSearch.getProduct().setProductType(ProductType.BestBuy);
             RegisteredSearch savedRegisteredSearch = registrySearchService
                     .saveRegisteredSearch(registeredSearch);
-            return getCustomHttpResponseEntity(registeredSearch, request);
+            return getCustomHttpResponseEntity(savedRegisteredSearch, request);
         }
         else {
             log.error("User is not authorized to access this resource");
@@ -78,10 +85,9 @@ public record SearchRegistryController(
     public ResponseEntity<CustomHttpResponseDTO> getRegisteredSearches( HttpServletRequest request) {
         log.info("Get Registered Searches");
         JWTAuthDTO jwtAuthDTO = controllerHelper.decodeJWT(request);
-        if(jwtAuthDTO != null) {
-            if(jwtAuthDTO.getAuthorities().contains("ROLE_BESTBUY_USER")) {
+        if(isAuthorizedToAccessResource(jwtAuthDTO)) {
                 ArrayList<RegisteredSearch> registeredSearches = registrySearchService
-                        .getRegisteredSearchesByUserIdOrUserEmail(null, jwtAuthDTO.getSubject());
+                        .getRegisteredSearchesUserEmail(jwtAuthDTO.getSubject());
                 return responseHandler.httpResponse(
                         CustomHttpResponseDTO.builder()
                                 .status(HttpStatus.OK)
@@ -92,24 +98,41 @@ public record SearchRegistryController(
                         controllerHelper.setupResponseHeaders(request)
                 );
             }
-            else {
+        else {
                 log.error("User is not authorized to access this resource");
                 throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
             }
+    }
+
+    // TODO: Need's to be a PATCH, but PATCH mapping is not working with @RequestBody
+
+    @GetMapping("/update")
+    public ResponseEntity<CustomHttpResponseDTO> updateRegisteredSearch(
+            @RequestBody RegisteredSearch registeredSearch, HttpServletRequest request) {
+        JWTAuthDTO jwtAuthDTO = controllerHelper.decodeJWT(request);
+        log.info("Update Registered Search {}", registeredSearch);
+        if(isAuthorizedToAccessResource(jwtAuthDTO, registeredSearch.getUserEmail())) {
+            if(!registeredSearch.isValidEntity()) {
+                log.warn("Invalid Search Request {}", registeredSearch);
+                throw new BadRequestException("Invalid request body for " + registeredSearch);
+            }
+            log.info("New Search Request {}", registeredSearch);
+            RegisteredSearch updatedRegisteredSearch = registrySearchService
+                    .updateRegisteredSearch(registeredSearch);
+            return getCustomHttpResponseEntity(updatedRegisteredSearch, request);
         }
         else {
-            log.error("User Provided Invalid Token");
-            throw new UnauthorizedTokenException("Invalid Token");
+            log.error("User is not authorized to access this resource");
+            throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
         }
     }
 
     @DeleteMapping()
     public ResponseEntity<CustomHttpResponseDTO> deleteRegisteredSearches(HttpServletRequest request) {
         JWTAuthDTO jwtAuthDTO = controllerHelper.decodeJWT(request);
-        if(jwtAuthDTO != null) {
-            log.info("Deleting all Registered Searches for {}", jwtAuthDTO.getSubject());
-            if(jwtAuthDTO.getAuthorities().contains("ROLE_BESTBUY_USER")) {
-                registrySearchService.deleteRegisteredSearchesByUserIdOrUserEmail(null, jwtAuthDTO.getSubject());
+            if(isAuthorizedToAccessResource(jwtAuthDTO)) {
+                log.info("Deleting all Registered Searches for {}", jwtAuthDTO.getSubject());
+                registrySearchService.deleteRegisteredSearchesByUserEmail(jwtAuthDTO.getSubject());
                 return responseHandler.httpResponse(
                         CustomHttpResponseDTO.builder()
                                 .status(HttpStatus.OK)
@@ -124,11 +147,6 @@ public record SearchRegistryController(
                 log.error("User is not authorized to access this resource");
                 throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
             }
-        }
-        else {
-            log.error("User Provided Invalid Token");
-            throw new UnauthorizedTokenException("Invalid Token");
-        }
     }
 
     @DeleteMapping("/{id}")
@@ -136,8 +154,7 @@ public record SearchRegistryController(
             @NonNull @PathVariable String id, HttpServletRequest request) {
         log.info("Delete Registered Searches");
         JWTAuthDTO jwtAuthDTO = controllerHelper.decodeJWT(request);
-        if(jwtAuthDTO != null) {
-            if(jwtAuthDTO.getAuthorities().contains("ROLE_BESTBUY_USER")) {
+            if(isAuthorizedToAccessResource(jwtAuthDTO)) {
                 registrySearchService.deleteRegisteredSearchByIdAndUserEmail(
                         id, jwtAuthDTO.getSubject());
                 return responseHandler.httpResponse(
@@ -154,11 +171,6 @@ public record SearchRegistryController(
                 log.error("User is not authorized to access this resource");
                 throw new TokenUnauthorizedToScopeException("Token is not authorized this resource");
             }
-        }
-        else {
-            log.error("User Provided Invalid Token");
-            throw new UnauthorizedTokenException("Invalid Token");
-        }
     }
 
     private ResponseEntity<CustomHttpResponseDTO> getCustomHttpResponseEntity(RegisteredSearch registeredSearch, HttpServletRequest request) {
@@ -171,6 +183,14 @@ public record SearchRegistryController(
                         .status(HttpStatus.OK)
                         .build(),
                 controllerHelper.setupResponseHeaders(request));
+    }
+
+    private boolean isAuthorizedToAccessResource(JWTAuthDTO jwtAuthDTO, String userEmail) {
+        return jwtAuthDTO != null && jwtAuthDTO.getAuthorities().contains("ROLE_BESTBUY_USER") && jwtAuthDTO.getSubject().equals(userEmail);
+    }
+
+    private boolean isAuthorizedToAccessResource(JWTAuthDTO jwtAuthDTO) {
+        return jwtAuthDTO != null && jwtAuthDTO.getAuthorities().contains("ROLE_BESTBUY_USER");
     }
 }
 
