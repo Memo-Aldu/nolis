@@ -1,4 +1,4 @@
-package com.nolis.productsearch.configuration;
+package com.nolis.registeredproudctsearch.configuration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

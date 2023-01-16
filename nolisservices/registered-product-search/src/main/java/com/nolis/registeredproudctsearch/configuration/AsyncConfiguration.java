@@ -1,4 +1,4 @@
-package com.nolis.searchregistry.configuration;
+package com.nolis.registeredproudctsearch.configuration;
 
 
 import org.springframework.beans.factory.annotation.Qualifier;

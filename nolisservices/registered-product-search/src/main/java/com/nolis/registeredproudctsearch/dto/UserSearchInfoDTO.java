@@ -5,6 +5,7 @@ import lombok.*;
 @Getter @Setter @Builder
 @AllArgsConstructor @NoArgsConstructor
 public class UserSearchInfoDTO {
-    private String userId;
     private String userEmail;
+    private String searchLocation;
+    private Integer wantedPrice;
 }
