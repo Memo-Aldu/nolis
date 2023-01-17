@@ -44,10 +44,10 @@ spring:
             - Path=/api/v1/auth/login/**
           filters:
             - AddRequestHeader=X-Request-Id,${spring.cloud.gateway.routes[4].id}
-        - id: product-registry-service
-          uri: "lb://product-registry-service"
+        - id: search-registry-service
+          uri: "lb://search-registry-service"
           predicates:
-            - Path=/api/v1/product-registry/**
+            - Path=/api/v1/search-registry/**
           filters:
             - AddRequestHeader=X-Request-Id,${spring.cloud.gateway.routes[0].id}
             - AuthRedirectFilter

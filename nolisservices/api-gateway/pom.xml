@@ -35,6 +35,12 @@
             <classifier>osx-aarch_64</classifier>
             <version>4.1.84.Final</version>
         </dependency>
+        <!--- custom dependency -->
+        <dependency>
+            <groupId>com.nolis.commondata</groupId>
+            <artifactId>common-data</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 </project>

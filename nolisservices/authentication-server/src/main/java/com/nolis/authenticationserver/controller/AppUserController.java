@@ -2,11 +2,11 @@ package com.nolis.authenticationserver.controller;
 
 import com.nolis.authenticationserver.DTO.AddRoleRequest;
 import com.nolis.authenticationserver.DTO.AppUserRequest;
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
-import com.nolis.authenticationserver.exception.BadRequestException;
 import com.nolis.authenticationserver.model.AppUser;
 import com.nolis.authenticationserver.service.AppUserService;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
+import com.nolis.commondata.exception.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -91,7 +91,8 @@ public record AppUserController(
 
     @PostMapping("/save")
     public ResponseEntity<CustomHttpResponseDTO> getUsers(@RequestBody AppUser appUser) {
-        if(!appUser.isValidEntity()) {
+        if(appUser.getUsername() == null && appUser.getPassword()
+                == null && appUser.getEmail() == null) {
             throw new BadRequestException("Invalid request body for "+appUser);
         }
         HttpHeaders headers = new HttpHeaders();
@@ -117,7 +118,7 @@ public record AppUserController(
             throw new BadRequestException("Invalid request body for "+request);
         }
         HttpHeaders headers = new HttpHeaders();
-        log.info("Adding role {} to user {}", request.roleName(), request.userId());
+        log.info("Adding role {} to user {}", request.authority(), request.userId());
         Map<String, Object> data = Map.of(
                 "user", appUserService
                         .addRoleToUserByIdOrEmail(request)

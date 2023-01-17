@@ -1,10 +1,10 @@
 package com.nolis.authenticationserver.DTO;
 
 public record RoleRequest(
-    String name,
+    String authority,
     String id
 ) {
     public boolean isValid() {
-        return name != null || id != null;
+        return authority != null || id != null;
     }
 }

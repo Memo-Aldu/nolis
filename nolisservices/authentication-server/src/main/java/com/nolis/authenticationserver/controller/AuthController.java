@@ -1,14 +1,14 @@
 package com.nolis.authenticationserver.controller;
 
 import com.mongodb.lang.NonNull;
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.exception.InvalidTokenException;
 import com.nolis.authenticationserver.exception.MissingAuthenticationException;
 import com.nolis.authenticationserver.exception.TokenAuthenticationException;
-import com.nolis.authenticationserver.exception.UnauthorizedTokenException;
 import com.nolis.authenticationserver.security.JwtUtils;
 import com.nolis.authenticationserver.service.JwtAuthenticationService;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
+import com.nolis.commondata.exception.UnauthorizedTokenException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -30,6 +30,41 @@ public record AuthController(
         ResponseHandler responseHandler
 
 ) {
+
+    @PostMapping("/decode")
+    public ResponseEntity<CustomHttpResponseDTO> decodeJWT(@NonNull HttpServletRequest request) {
+        String token = jwtUtils.getTokenFromHeader(request.getHeader(AUTHORIZATION));
+        log.debug("Decoding token {}", token);
+        try {
+            Map<String, Object> data = Map.of(
+                    "subject", jwtUtils.getSubjectFromToken(token),
+                    "access_token", token,
+                    "authorities", jwtUtils.getAuthoritiesFromToken(token)
+            );
+            log.info("Decoded token {}", data);
+            return responseHandler.httpResponse(
+                    CustomHttpResponseDTO.builder()
+                            .message("Token decoded successfully")
+                            .data(data)
+                            .success(true)
+                            .timestamp(System.currentTimeMillis())
+                            .status(HttpStatus.OK)
+                            .build(),
+                    setupResponseHeaders(request));
+        } catch (InvalidTokenException | TokenAuthenticationException | MissingAuthenticationException |
+                 UnauthorizedTokenException e) {
+            return responseHandler.httpResponse(
+                    CustomHttpResponseDTO.builder()
+                            .message(e.getMessage())
+                            .success(false)
+                            .timestamp(System.currentTimeMillis())
+                            .status(HttpStatus.UNAUTHORIZED)
+                            .build(),
+                    setupResponseHeaders(request));
+        }
+    }
+
+
     @PostMapping("/authenticate")
     public ResponseEntity<CustomHttpResponseDTO> authenticateUser(
             @NonNull HttpServletRequest request) {
@@ -77,7 +112,8 @@ public record AuthController(
             log.info("Token {}", token);
             Map<String, Object> data = Map.of(
                     "access_token", token,
-                    scope, true);
+                    scope, true,
+                    "subject", jwtUtils.getSubjectFromToken(token));
                 if (jwtAuthenticationService.isAuthorized(token, scope)) {
                     return responseHandler.httpResponse(
                             CustomHttpResponseDTO.builder()

@@ -1,9 +1,9 @@
 package com.nolis.authenticationserver.filter;
 import com.mongodb.lang.NonNull;
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
-import com.nolis.authenticationserver.security.EndpointConfig;
+import com.nolis.authenticationserver.configuration.EndpointConfig;
 import com.nolis.authenticationserver.security.JwtUtils;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

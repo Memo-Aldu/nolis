@@ -5,10 +5,12 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.nolis.authenticationserver.exception.AppEntityNotFoundException;
+import com.nolis.authenticationserver.configuration.JwtConfig;
 import com.nolis.authenticationserver.exception.InvalidTokenException;
 import com.nolis.authenticationserver.model.AppUser;
+import com.nolis.authenticationserver.model.Role;
 import com.nolis.authenticationserver.service.AppUserService;
+import com.nolis.commondata.exception.AppEntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,7 +39,7 @@ public class JwtUtils {
                 .withExpiresAt(java.sql.Date.valueOf(LocalDate.now()
                         .plusDays(jwtConfig.tokenExpirationAfterDays())))
                 .withClaim("authorities", appUser.getAuthorities().stream()
-                        .map(SimpleGrantedAuthority::getAuthority)
+                        .map(Role::getAuthority)
                         .collect(Collectors.toList()))
                 .sign(algorithm());
     }
@@ -102,6 +104,11 @@ public class JwtUtils {
     public String[] getAuthoritiesFromToken(String token) {
         DecodedJWT decodedJWT = decodeAndVerifyJWT(token);
         return decodedJWT.getClaim("authorities").asArray(String.class);
+    }
+
+    public String getSubjectFromToken(String token) {
+        DecodedJWT decodedJWT = decodeAndVerifyJWT(token);
+        return decodedJWT.getSubject();
     }
 
     private DecodedJWT decodeAndVerifyJWT(String token) throws SignatureVerificationException {

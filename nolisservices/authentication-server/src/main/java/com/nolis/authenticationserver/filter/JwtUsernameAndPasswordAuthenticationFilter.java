@@ -1,12 +1,12 @@
 package com.nolis.authenticationserver.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nolis.authenticationserver.DTO.CustomHttpResponseDTO;
 import com.nolis.authenticationserver.DTO.EmailPasswordAuthenticationRequest;
 import com.nolis.authenticationserver.apihelper.ResponseHandler;
 import com.nolis.authenticationserver.model.AppUser;
-import com.nolis.authenticationserver.security.JwtConfig;
+import com.nolis.authenticationserver.configuration.JwtConfig;
 import com.nolis.authenticationserver.security.JwtUtils;
+import com.nolis.commondata.dto.CustomHttpResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -76,7 +76,7 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
                                               AuthenticationException failed) throws IOException, ServletException {
         response = responseHandler.jsonResponse(
                 CustomHttpResponseDTO.builder()
-                        .data(Map.of("error", "Invalid token"))
+                        .data(Map.of("error", "Invalid Authentication"))
                         .timestamp(System.currentTimeMillis())
                         .status(HttpStatus.UNAUTHORIZED)
                         .success(false)

@@ -33,3 +33,19 @@ application:
     refreshHeader: refresh_token
     issuer: nolis
     audience: nolis
+  service:
+    redis:
+      host: "localhost"
+      port: 6380
+      cache:
+        - name: "AppUsers"
+          ttl: 20
+          unit: SECONDS
+        - name: "AppRoles"
+          ttl: 3
+          unit: MINUTES
+
+
+
+
+

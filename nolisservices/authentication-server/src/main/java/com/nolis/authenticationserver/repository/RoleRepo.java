@@ -7,10 +7,10 @@ import java.util.Optional;
 
 @Repository
 public interface RoleRepo extends MongoRepository<Role, String> {
-    Optional<Role> findRoleByName(String name);
-    Optional<Role> findRoleByIdOrName(String id, String name);
-    void deleteRoleByNameOrId(String name, String id);
-    boolean existsRoleByNameOrId(String name, String id);
+    Optional<Role> findRoleByAuthority(String authority);
+    Optional<Role> findRoleByIdOrAuthority(String id, String authority);
+    void deleteRoleByAuthorityOrId(String authority, String id);
+    boolean existsRoleByAuthorityOrId(String authority, String id);
 
 
 }

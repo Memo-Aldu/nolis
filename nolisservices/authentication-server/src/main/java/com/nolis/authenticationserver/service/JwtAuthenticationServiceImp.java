@@ -1,6 +1,6 @@
 package com.nolis.authenticationserver.service;
 
-import com.nolis.authenticationserver.security.JwtConfig;
+import com.nolis.authenticationserver.configuration.JwtConfig;
 import com.nolis.authenticationserver.security.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;

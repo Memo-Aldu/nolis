@@ -1,6 +1,6 @@
 package com.nolis.productsearch.helper;
 
-import com.nolis.productsearch.service.consumer.AuthService;
+import com.nolis.commonconfig.security.service.AuthService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
